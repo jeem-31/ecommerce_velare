@@ -1,0 +1,27 @@
+        try:
+            # Verify product belongs to seller
+            print(f"🔍 Verifying product ownership...")
+            product_check = supabase.table('products').select('seller_id').eq('product_id', product_id).execute()
+            
+            if not product_check.data or product_check.data[0]['seller_id'] != seller_id:
+                return jsonify({'success': False, 'message': 'Product not found or unauthorized'}), 404
+            
+            # Only update product info if not just adding variants
+            if not is_only_adding_variants:
+                # Determine SDG value
+                if is_handmade and is_biodegradable:
+                    sdg_value = 'both'
+                elif is_handmade:
+                    sdg_value = 'handmade'
+                elif is_biodegradable:
+                    sdg_value = 'biodegradable'
+                else:
+                    sdg_value = None
+                
+                # Update product basic info
+                print(f"📝 Updating product info...")
+                supabase.table('products').update({
+                    'product_name': product_name,
+                    'description': description,
+                    'materials': materials if materials else None,
+                  

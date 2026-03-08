@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: velare-app
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount code for development (hot reload)
+      - .:/app
+      # Persist uploads
+      - ./static/uploads:/app/static/uploads
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - velare-network
+
+networks:
+  velare-network:
+    driver: bridge
