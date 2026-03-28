@@ -69,6 +69,17 @@ def checkout():
             
             checkout_items = checkout_response.data if checkout_response.data else []
             
+            # Debug: Print raw response
+            print(f"[CHECKOUT DEBUG] Raw checkout_items count: {len(checkout_items)}")
+            for idx, item in enumerate(checkout_items):
+                print(f"[CHECKOUT DEBUG] Item {idx}:")
+                print(f"  - cart_id: {item.get('cart_id')}")
+                print(f"  - product_id: {item.get('product_id')}")
+                print(f"  - products: {item.get('products')}")
+                if item.get('products'):
+                    print(f"  - seller_id from products: {item.get('products', {}).get('seller_id')}")
+                    print(f"  - sellers from products: {item.get('products', {}).get('sellers')}")
+            
             # Sort by shop_name in Python instead of Supabase
             if checkout_items:
                 checkout_items.sort(key=lambda x: x.get('products', {}).get('sellers', {}).get('shop_name', ''))
@@ -115,23 +126,62 @@ def checkout():
                 item['stock_quantity'] = variant.get('stock_quantity') if variant else None
                 item['size'] = variant.get('size') if variant else None
                 item['color'] = variant.get('color') if variant else None
+                
+                # Debug: Log if seller_id is missing
+                if item['seller_id'] is None:
+                    print(f"⚠️ WARNING: Product {item.get('product_id')} ({item.get('product_name')}) has no seller_id!")
+                    print(f"   Product data: {product}")
+                    print(f"   Seller data: {seller}")
             
             # Group items by shop
             from collections import defaultdict
             shops = defaultdict(list)
+            invalid_items = []
+            
             for item in checkout_items:
                 shop_key = item['seller_id']
+                # Skip items without seller_id
+                if shop_key is None:
+                    print(f"⚠️ Warning: Item {item.get('product_id')} has no seller_id")
+                    invalid_items.append(item)
+                    continue
                 shops[shop_key].append(item)
+            
+            # If all items are invalid, show error
+            if not shops and invalid_items:
+                error_msg = "Some items in your cart have invalid data. Please remove them and try again."
+                return render_template('checkout.html', 
+                                     shop_groups=[],
+                                     default_address=None,
+                                     other_addresses=[],
+                                     vouchers=[],
+                                     error_message=error_msg)
             
             # Convert to list of shop groups
             shop_groups = []
             for seller_id, items in shops.items():
+                # Double check seller_id is not None and is a valid integer
+                if seller_id is None or not isinstance(seller_id, (int, str)) or str(seller_id).strip() == '':
+                    print(f"⚠️ Skipping shop group with invalid seller_id: {seller_id}")
+                    continue
+                
+                # Ensure seller_id is an integer
+                try:
+                    seller_id_int = int(seller_id)
+                except (ValueError, TypeError):
+                    print(f"⚠️ Skipping shop group - seller_id cannot be converted to int: {seller_id}")
+                    continue
+                
                 shop_groups.append({
-                    'seller_id': seller_id,
-                    'shop_name': items[0]['shop_name'],
-                    'shop_logo': items[0]['shop_logo'],
+                    'seller_id': seller_id_int,
+                    'shop_name': items[0].get('shop_name', 'Unknown Shop'),
+                    'shop_logo': items[0].get('shop_logo'),
                     'shop_items': items
                 })
+            
+            print(f"[CHECKOUT] Created {len(shop_groups)} shop groups")
+            for sg in shop_groups:
+                print(f"  - Shop: {sg['shop_name']} (seller_id: {sg['seller_id']}, type: {type(sg['seller_id'])})")
             
             # Fetch buyer's addresses
             addresses = get_buyer_addresses(buyer_id)
@@ -216,6 +266,13 @@ def checkout():
                 vouchers.sort(key=lambda x: (x['voucher_type'], -x['discount_percent']))
             
             print(f"🎉 Final vouchers to display: {len(vouchers)}")
+            
+            # Final debug before rendering
+            print(f"[CHECKOUT FINAL] Passing {len(shop_groups)} shop groups to template:")
+            for sg in shop_groups:
+                print(f"  - seller_id: {sg.get('seller_id')} (type: {type(sg.get('seller_id'))})")
+                print(f"    shop_name: {sg.get('shop_name')}")
+                print(f"    items: {len(sg.get('shop_items', []))}")
             
             return render_template('checkout.html', 
                                  shop_groups=shop_groups,
