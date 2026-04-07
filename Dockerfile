@@ -20,13 +20,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files one by one
-COPY app.py .
-COPY blueprints ./blueprints
-COPY database ./database
-COPY static ./static
-COPY templates ./templates
-COPY utils ./utils
+# Copy all application files
+COPY . .
 
 # Create necessary directories
 RUN mkdir -p static/uploads/products \

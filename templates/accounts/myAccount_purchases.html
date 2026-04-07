@@ -167,6 +167,10 @@
 						{% if order.order_status == 'cancelled' %}
 							{% set display_status = 'cancelled' %}
 							{% set display_label = 'Cancelled' %}
+						{% elif order.delivery_status == None or order.delivery_status == 'none' %}
+							{# NULL status - seller hasn't started preparing yet #}
+							{% set display_status = 'pending-shipment' %}
+							{% set display_label = 'Order Placed' %}
 						{% elif order.delivery_status == 'preparing' %}
 							{# Preparing is still under Pending Shipment tab, but shows different badge #}
 							{% set display_status = 'pending-shipment' %}

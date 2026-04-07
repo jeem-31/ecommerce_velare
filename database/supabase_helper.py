@@ -717,9 +717,11 @@ def update_order_status_supabase(order_id, status):
 # ============================================================================
 
 def get_pending_deliveries():
-    """Get all pending deliveries (not yet assigned to a rider)"""
+    """Get all pending deliveries (not yet assigned to a rider) - ONLY those marked as ready for pickup"""
     try:
         supabase = get_supabase_client()
+        # Only get deliveries with status='pending' (ready for pickup by seller)
+        # Do NOT include null or 'preparing' status
         response = supabase.table('deliveries').select('''
             delivery_id,
             order_id,
@@ -743,42 +745,9 @@ def get_pending_deliveries():
                     phone_number
                 )
             )
-        ''').is_('rider_id', 'null').in_('status', ['pending', 'preparing']).execute()
+        ''').is_('rider_id', 'null').eq('status', 'pending').execute()
         
-        # Also get deliveries with null status and no rider
-        null_status_response = supabase.table('deliveries').select('''
-            delivery_id,
-            order_id,
-            pickup_address,
-            delivery_address,
-            delivery_fee,
-            status,
-            rider_id,
-            orders (
-                order_number,
-                total_amount,
-                buyer_id,
-                seller_id,
-                buyers (
-                    first_name,
-                    last_name,
-                    phone_number
-                ),
-                sellers (
-                    shop_name,
-                    phone_number
-                )
-            )
-        ''').is_('rider_id', 'null').is_('status', 'null').execute()
-        
-        # Combine both results
-        all_deliveries = []
-        if response.data:
-            all_deliveries.extend(response.data)
-        if null_status_response.data:
-            all_deliveries.extend(null_status_response.data)
-        
-        return all_deliveries
+        return response.data if response.data else []
     except Exception as e:
         print(f"❌ Error getting pending deliveries: {e}")
         return []
@@ -794,17 +763,17 @@ def get_delivery_by_id(delivery_id):
         return None
 
 def accept_delivery_supabase(delivery_id, rider_id):
-    """Assign a delivery to a rider"""
+    """Assign a delivery to a rider (when rider accepts from pickup list)"""
     try:
         from datetime import datetime
         supabase = get_supabase_client()
         
         # Update delivery with rider_id and status
         # Using 'assigned' as the status when rider accepts
+        # DO NOT set picked_up_at here - only set when rider marks as picked up
         response = supabase.table('deliveries').update({
             'rider_id': rider_id,
-            'status': 'assigned',
-            'picked_up_at': datetime.now().isoformat()
+            'status': 'assigned'
         }).eq('delivery_id', delivery_id).execute()
         
         if response.data:

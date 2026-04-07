@@ -126,7 +126,8 @@ def place_order():
             
             # Get starting order number
             current_year = datetime.now().year
-            last_order_response = supabase.table('orders').select('order_number').like('order_number', f'VEL-{current_year}-%').order('order_id', desc=True).limit(1).execute()
+            # Use startswith filter instead of like/ilike
+            last_order_response = supabase.table('orders').select('order_number').ilike('order_number', f'VEL-{current_year}-*').order('order_id', desc=True).limit(1).execute()
             
             if last_order_response.data:
                 try:
@@ -173,9 +174,15 @@ def place_order():
                 order_id = order_response.data[0]['order_id']
                 order_ids.append(order_id)
                 
-                # Get seller address
-                seller_response = supabase.table('sellers').select('shop_name').eq('seller_id', seller_id).execute()
-                pickup_address = seller_response.data[0]['shop_name'] if seller_response.data else 'N/A'
+                # Get seller address from addresses table
+                seller_address_response = supabase.table('addresses').select('full_address').eq('user_type', 'seller').eq('user_ref_id', seller_id).eq('is_default', True).execute()
+                
+                if seller_address_response.data:
+                    pickup_address = seller_address_response.data[0]['full_address']
+                else:
+                    # Fallback to shop name if no address found
+                    seller_response = supabase.table('sellers').select('shop_name').eq('seller_id', seller_id).execute()
+                    pickup_address = seller_response.data[0]['shop_name'] if seller_response.data else 'N/A'
                 
                 # Get buyer address
                 address_response = supabase.table('addresses').select('full_address').eq('address_id', address_id).execute()
@@ -184,14 +191,14 @@ def place_order():
                 # Calculate delivery fee
                 actual_delivery_fee = Decimal('49.00') / num_sellers if is_free_shipping else shipping_fee / num_sellers
                 
-                # Create delivery record
+                # Create delivery record with NULL status (seller needs to click "Prepare Package" first)
                 delivery_data = {
                     'order_id': order_id,
                     'pickup_address': pickup_address,
                     'delivery_address': delivery_address,
                     'delivery_fee': float(actual_delivery_fee),
                     'paid_by_platform': is_free_shipping,
-                    'status': None
+                    'status': None  # NULL status - seller must click "Prepare Package" first
                 }
                 supabase.table('deliveries').insert(delivery_data).execute()
                 

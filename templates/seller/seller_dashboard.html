@@ -201,7 +201,9 @@
 										<td>₱{{ "{:,.2f}".format(order.subtotal) }}</td>
 										<td>
 											<span class="status-badge status-{{ order.delivery_status or order.order_status }}">
-												{% if order.delivery_status == 'preparing' %}
+												{% if order.delivery_status == None or order.delivery_status == 'none' %}
+													New Order
+												{% elif order.delivery_status == 'preparing' %}
 													Preparing
 												{% elif order.delivery_status == 'pending' or order.order_status == 'pending' %}
 													Pending

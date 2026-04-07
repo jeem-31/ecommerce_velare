@@ -178,7 +178,7 @@ def myAccount_purchases():
         for order in orders:
             if order['order_status'] == 'cancelled':
                 counts['cancelled'] += 1
-            elif order['delivery_status'] in ['pending', 'assigned', 'preparing']:
+            elif order['delivery_status'] in ['pending', 'assigned', 'preparing'] or order['delivery_status'] is None:
                 counts['pending_shipment'] += 1
             elif order['delivery_status'] == 'in_transit':
                 counts['in_transit'] += 1
