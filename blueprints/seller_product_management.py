@@ -931,19 +931,90 @@ def mark_order_ready_for_pickup(order_id):
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
         
         try:
-            # Verify this order belongs to the seller
-            order_response = supabase.table('orders').select('seller_id').eq('order_id', order_id).execute()
+            # Verify this order belongs to the seller and get order details
+            order_response = supabase.table('orders').select('''
+                seller_id,
+                buyer_id,
+                order_number,
+                order_items (
+                    product_name,
+                    quantity
+                )
+            ''').eq('order_id', order_id).execute()
             
             if not order_response.data:
                 return jsonify({'success': False, 'message': 'Order not found'}), 404
             
-            if order_response.data[0]['seller_id'] != seller_id:
+            order = order_response.data[0]
+            
+            if order['seller_id'] != seller_id:
                 return jsonify({'success': False, 'message': 'Unauthorized'}), 403
             
             # Update delivery status to pending (ready for rider to accept)
             update_response = supabase.table('deliveries').update({
                 'status': 'pending'
             }).eq('order_id', order_id).execute()
+            
+            # Create consolidated notification message for multiple products
+            order_items = order.get('order_items', [])
+            if len(order_items) > 1:
+                # Multiple products - consolidate into one message
+                product_list = []
+                for item in order_items:
+                    product_list.append(f"{item['product_name']} (x{item['quantity']})")
+                products_text = ", ".join(product_list)
+                notification_message = f"Order #{order['order_number']} is ready for pickup. Items: {products_text}"
+            elif len(order_items) == 1:
+                # Single product
+                item = order_items[0]
+                notification_message = f"Order #{order['order_number']} is ready for pickup. Item: {item['product_name']} (x{item['quantity']})"
+            else:
+                # Fallback
+                notification_message = f"Order #{order['order_number']} is ready for pickup."
+            
+            # Get buyer and seller user_ids for notifications
+            buyer_response = supabase.table('buyers').select('user_id').eq('buyer_id', order['buyer_id']).execute()
+            seller_response = supabase.table('sellers').select('user_id').eq('seller_id', seller_id).execute()
+            
+            buyer_user_id = buyer_response.data[0]['user_id'] if buyer_response.data else None
+            seller_user_id = seller_response.data[0]['user_id'] if seller_response.data else None
+            
+            # Get current Philippine time
+            from datetime import datetime, timedelta
+            ph_time = (datetime.utcnow() + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+            formatted_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+            
+            # Send notification to BOTH buyer and seller
+            notifications_to_create = []
+            
+            if buyer_user_id:
+                notifications_to_create.append({
+                    'user_id': buyer_user_id,
+                    'title': '📦 Order Ready for Pickup',
+                    'message': notification_message,
+                    'notification_type': 'delivery',
+                    'is_read': False,
+                    'order_id': order_id,
+                    'formatted_date': formatted_date,
+                    'created_at': ph_time
+                })
+            
+            if seller_user_id:
+                notifications_to_create.append({
+                    'user_id': seller_user_id,
+                    'title': '📦 Order Ready for Pickup',
+                    'message': f"You marked {notification_message}",
+                    'notification_type': 'delivery',
+                    'is_read': False,
+                    'order_id': order_id,
+                    'formatted_date': formatted_date,
+                    'created_at': ph_time
+                })
+            
+            # Insert notifications
+            if notifications_to_create:
+                supabase.table('notifications').insert(notifications_to_create).execute()
+                print(f"✅ Sent notifications to buyer and seller")
             
             print(f"✅ Order {order_id} marked as ready for pickup")
             return jsonify({'success': True, 'message': 'Order marked as ready for pickup'}), 200
@@ -958,9 +1029,6 @@ def mark_order_ready_for_pickup(order_id):
         print(f"❌ Error marking order as ready for pickup: {str(e)}")
         import traceback
         traceback.print_exc()
-        return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
-    except Exception as e:
-        print(f"Error marking order ready for pickup: {str(e)}")
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
 
 @seller_product_management_bp.route('/api/products/sold', methods=['GET'])

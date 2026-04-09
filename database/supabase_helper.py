@@ -808,20 +808,144 @@ def accept_delivery_supabase(delivery_id, rider_id):
         from datetime import datetime
         supabase = get_supabase_client()
         
+        # Get delivery details first
+        delivery_response = supabase.table('deliveries').select('''
+            delivery_id,
+            order_id,
+            orders (
+                order_number,
+                buyer_id,
+                seller_id,
+                sellers (
+                    shop_name
+                )
+            )
+        ''').eq('delivery_id', delivery_id).execute()
+        
+        if not delivery_response.data:
+            print(f"❌ Delivery {delivery_id} not found")
+            return False
+        
+        delivery = delivery_response.data[0]
+        order = delivery.get('orders', {})
+        buyer_id = order.get('buyer_id')
+        seller_id = order.get('seller_id')
+        order_number = order.get('order_number')
+        shop_name = order.get('sellers', {}).get('shop_name', 'Shop')
+        
         # Update delivery with rider_id and status
-        # Using 'assigned' as the status when rider accepts
-        # DO NOT set picked_up_at here - only set when rider marks as picked up
         response = supabase.table('deliveries').update({
             'rider_id': rider_id,
-            'status': 'assigned'
+            'status': 'assigned',
+            'assigned_at': datetime.now().isoformat()
         }).eq('delivery_id', delivery_id).execute()
         
-        if response.data:
-            print(f"✅ Delivery {delivery_id} assigned to rider {rider_id}")
-            return True
-        return False
+        if not response.data:
+            return False
+        
+        print(f"✅ Delivery {delivery_id} assigned to rider {rider_id}")
+        
+        # Send automatic introduction messages to BOTH buyer and seller
+        # Check if there are other active deliveries for this buyer/seller with same rider
+        active_buyer_deliveries = supabase.table('deliveries').select('''
+            delivery_id,
+            orders (
+                order_number
+            )
+        ''').eq('rider_id', rider_id).eq('order_id', order.get('order_id')).in_('status', ['assigned', 'in_transit']).execute()
+        
+        # Get all order numbers for this buyer
+        buyer_order_numbers = []
+        if active_buyer_deliveries.data:
+            for d in active_buyer_deliveries.data:
+                order_num = d.get('orders', {}).get('order_number')
+                if order_num:
+                    buyer_order_numbers.append(order_num)
+        
+        # Create message for buyer
+        if len(buyer_order_numbers) > 1:
+            orders_text = ", ".join([f"#{num}" for num in buyer_order_numbers])
+            buyer_message = f"Hi! I'm your rider for Orders {orders_text} from {shop_name}. I'll keep you updated on your deliveries."
+        else:
+            buyer_message = f"Hi! I'm your rider for Order #{order_number} from {shop_name}. I'll keep you updated on your delivery."
+        
+        # Create message for seller
+        seller_message = f"Hi! I'm the rider assigned to pick up Order #{order_number}. I'll be there soon to collect the package."
+        
+        # Send message to buyer
+        if buyer_id:
+            # Check/create conversation with buyer
+            buyer_conv_response = supabase.table('conversations').select('conversation_id').eq('rider_id', rider_id).eq('buyer_id', buyer_id).is_('seller_id', 'null').execute()
+            
+            if buyer_conv_response.data:
+                buyer_conv_id = buyer_conv_response.data[0]['conversation_id']
+            else:
+                # Create new conversation
+                buyer_conv_data = {
+                    'buyer_id': buyer_id,
+                    'rider_id': rider_id,
+                    'last_message': buyer_message,
+                    'last_message_at': datetime.now().isoformat()
+                }
+                buyer_conv_response = supabase.table('conversations').insert(buyer_conv_data).execute()
+                if buyer_conv_response.data:
+                    buyer_conv_id = buyer_conv_response.data[0]['conversation_id']
+                else:
+                    buyer_conv_id = None
+            
+            # Insert message
+            if buyer_conv_id:
+                supabase.table('messages').insert({
+                    'conversation_id': buyer_conv_id,
+                    'sender_type': 'rider',
+                    'sender_id': rider_id,
+                    'message_text': buyer_message,
+                    'is_read': False,
+                    'topic': 'delivery_assignment',
+                    'extension': 'text'
+                }).execute()
+                print(f"✅ Sent introduction message to buyer {buyer_id}")
+        
+        # Send message to seller
+        if seller_id:
+            # Check/create conversation with seller
+            seller_conv_response = supabase.table('conversations').select('conversation_id').eq('rider_id', rider_id).eq('seller_id', seller_id).is_('buyer_id', 'null').execute()
+            
+            if seller_conv_response.data:
+                seller_conv_id = seller_conv_response.data[0]['conversation_id']
+            else:
+                # Create new conversation
+                seller_conv_data = {
+                    'seller_id': seller_id,
+                    'rider_id': rider_id,
+                    'last_message': seller_message,
+                    'last_message_at': datetime.now().isoformat()
+                }
+                seller_conv_response = supabase.table('conversations').insert(seller_conv_data).execute()
+                if seller_conv_response.data:
+                    seller_conv_id = seller_conv_response.data[0]['conversation_id']
+                else:
+                    seller_conv_id = None
+            
+            # Insert message
+            if seller_conv_id:
+                supabase.table('messages').insert({
+                    'conversation_id': seller_conv_id,
+                    'sender_type': 'rider',
+                    'sender_id': rider_id,
+                    'message_text': seller_message,
+                    'is_read': False,
+                    'topic': 'delivery_assignment',
+                    'extension': 'text'
+                }).execute()
+                print(f"✅ Sent introduction message to seller {seller_id}")
+        
+        return True
+        
     except Exception as e:
         print(f"❌ Error accepting delivery: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -1008,14 +1132,49 @@ def get_rider_total_earnings(rider_id):
 
 def create_conversation(buyer_id, seller_id, initial_message, rider_id=None, delivery_id=None):
     """
-    Create a new conversation
+    Create a new conversation OR return existing conversation between the same parties.
+    
+    IMPORTANT: Conversations are now based on user profiles, NOT per delivery.
+    - If a conversation already exists between rider and buyer, reuse it.
+    - If a conversation already exists between seller and buyer, reuse it.
+    - This prevents cluttered inboxes with multiple threads for the same people.
+    
     Returns conversation_id
     """
     try:
         supabase = get_supabase_client()
         
-        print(f"💬 Creating conversation: buyer_id={buyer_id}, seller_id={seller_id}, rider_id={rider_id}, delivery_id={delivery_id}")
+        print(f"💬 Creating/finding conversation: buyer_id={buyer_id}, seller_id={seller_id}, rider_id={rider_id}, delivery_id={delivery_id}")
         
+        # Check if conversation already exists between these parties
+        existing_conversation = None
+        
+        if rider_id and buyer_id:
+            # Rider-Buyer conversation: Check if one already exists (ignore delivery_id)
+            print(f"🔍 Checking for existing rider-buyer conversation...")
+            response = supabase.table('conversations').select('conversation_id').eq('rider_id', rider_id).eq('buyer_id', buyer_id).is_('seller_id', 'null').execute()
+            
+            if response.data and len(response.data) > 0:
+                existing_conversation = response.data[0]['conversation_id']
+                print(f"✅ Found existing rider-buyer conversation: {existing_conversation}")
+        
+        elif seller_id and buyer_id:
+            # Seller-Buyer conversation: Check if one already exists
+            print(f"🔍 Checking for existing seller-buyer conversation...")
+            response = supabase.table('conversations').select('conversation_id').eq('seller_id', seller_id).eq('buyer_id', buyer_id).is_('rider_id', 'null').execute()
+            
+            if response.data and len(response.data) > 0:
+                existing_conversation = response.data[0]['conversation_id']
+                print(f"✅ Found existing seller-buyer conversation: {existing_conversation}")
+        
+        # If conversation exists, update last message and return existing ID
+        if existing_conversation:
+            print(f"♻️ Reusing existing conversation {existing_conversation}")
+            update_conversation_last_message(existing_conversation, initial_message)
+            return existing_conversation
+        
+        # No existing conversation, create new one
+        print(f"➕ Creating new conversation...")
         conversation_data = {
             'last_message': initial_message,
             'last_message_at': datetime.now().isoformat(),
@@ -1032,11 +1191,12 @@ def create_conversation(buyer_id, seller_id, initial_message, rider_id=None, del
         if seller_id:
             conversation_data['seller_id'] = seller_id
         
-        # Add rider and delivery if provided
+        # Add rider if provided (but NOT delivery_id - we don't link to specific deliveries anymore)
         if rider_id:
             conversation_data['rider_id'] = rider_id
-        if delivery_id:
-            conversation_data['delivery_id'] = delivery_id
+        
+        # NOTE: We no longer set delivery_id to keep conversations profile-based
+        # delivery_id parameter is kept for backward compatibility but not used
         
         print(f"📦 Conversation data: {conversation_data}")
         

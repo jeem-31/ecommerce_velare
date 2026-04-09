@@ -476,6 +476,46 @@ form button {
     color: #999999;
 }
 
+/* Chat Tabs */
+.chat-tabs {
+    display: flex;
+    background: #ffffff;
+    border-bottom: 1.5px solid #D3BD9B;
+}
+
+.chat-tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #666666;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chat-tab:hover {
+    background: #faf9f7;
+    color: #181818;
+}
+
+.chat-tab.active {
+    color: #D3BD9B;
+    border-bottom-color: #D3BD9B;
+    background: #faf9f7;
+}
+
+.chat-tab i {
+    font-size: 16px;
+}
+
 /* Conversations List */
 .conversations-list {
     flex: 1;

@@ -1,9 +1,11 @@
 // Rider Chat JavaScript
 
 let currentConversation = null;
-let conversations = [];
-let lastMessageId = 0; // Track last message to avoid duplicates
-let isSendingMessage = false; // Prevent double sending
+let buyerConversations = [];
+let sellerConversations = [];
+let activeTab = 'buyers'; // 'buyers' or 'sellers'
+let lastMessageId = 0;
+let isSendingMessage = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeChat();
@@ -50,6 +52,22 @@ function setupEventListeners() {
         });
     }
 
+    // Tab switching
+    const buyersTab = document.getElementById('buyersTab');
+    const sellersTab = document.getElementById('sellersTab');
+    
+    if (buyersTab) {
+        buyersTab.addEventListener('click', function() {
+            switchTab('buyers');
+        });
+    }
+    
+    if (sellersTab) {
+        sellersTab.addEventListener('click', function() {
+            switchTab('sellers');
+        });
+    }
+
     // Search input
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -74,6 +92,25 @@ function setupEventListeners() {
     }
 }
 
+// Switch between Buyers and Sellers tabs
+function switchTab(tab) {
+    activeTab = tab;
+    
+    // Update tab UI
+    const buyersTab = document.getElementById('buyersTab');
+    const sellersTab = document.getElementById('sellersTab');
+    
+    if (tab === 'buyers') {
+        buyersTab.classList.add('active');
+        sellersTab.classList.remove('active');
+        displayConversations(buyerConversations);
+    } else {
+        sellersTab.classList.add('active');
+        buyersTab.classList.remove('active');
+        displayConversations(sellerConversations);
+    }
+}
+
 // Update status text
 function updateStatusText() {
     const statusToggle = document.getElementById('onlineStatus');
@@ -94,8 +131,15 @@ function loadConversations() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                conversations = data.conversations;
-                displayConversations(conversations);
+                buyerConversations = data.buyer_conversations || [];
+                sellerConversations = data.seller_conversations || [];
+                
+                // Display conversations based on active tab
+                if (activeTab === 'buyers') {
+                    displayConversations(buyerConversations);
+                } else {
+                    displayConversations(sellerConversations);
+                }
             } else {
                 console.error('Error loading conversations:', data.error);
                 displayEmptyConversations();
@@ -118,41 +162,15 @@ function displayConversations(convs) {
         return;
     }
     
-    // Remove duplicates based on delivery_id
-    const uniqueConvs = [];
-    const seenDeliveryIds = new Set();
+    conversationsList.innerHTML = convs.map(conv => createConversationItem(conv)).join('');
     
-    convs.forEach(conv => {
-        if (!seenDeliveryIds.has(conv.delivery_id)) {
-            seenDeliveryIds.add(conv.delivery_id);
-            uniqueConvs.push(conv);
-        }
-    });
-    
-    // Filter out delivered conversations older than 20 seconds
-    const filteredConvs = uniqueConvs.filter(conv => {
-        if (conv.delivery_status === 'delivered' && conv.last_message_time) {
-            const lastMessageDate = new Date(conv.last_message_time);
-            const now = new Date();
-            const diffSeconds = (now - lastMessageDate) / 1000;
-            return diffSeconds <= 20; // Keep only if 20 seconds or less
-        }
-        return true; // Keep non-delivered conversations
-    });
-    
-    if (filteredConvs.length === 0) {
-        displayEmptyConversations();
-        return;
-    }
-    
-    conversationsList.innerHTML = filteredConvs.map(conv => createConversationItem(conv)).join('');
-    
-    // Add click handlers
+    // Add click handlers - support both buyer_id and seller_id
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.addEventListener('click', function() {
             const convId = this.dataset.conversationId;
-            const deliveryId = this.dataset.deliveryId;
-            selectConversation(convId, parseInt(deliveryId));
+            const contactType = this.dataset.contactType;
+            const contactId = parseInt(this.dataset.contactId);
+            selectConversation(convId, contactId, contactType);
         });
     });
 }
@@ -172,22 +190,24 @@ function createConversationItem(conv) {
     
     let avatarHTML;
     if (hasAvatar) {
-        // Handle both Supabase URLs and local paths
         let avatarSrc;
         if (conv.contact_avatar.startsWith('http://') || conv.contact_avatar.startsWith('https://')) {
-            avatarSrc = conv.contact_avatar; // Supabase URL
+            avatarSrc = conv.contact_avatar;
         } else if (conv.contact_avatar.startsWith('static/')) {
-            avatarSrc = `/${conv.contact_avatar}`; // Local with static/ prefix
+            avatarSrc = `/${conv.contact_avatar}`;
         } else {
-            avatarSrc = `/static/${conv.contact_avatar}`; // Relative path
+            avatarSrc = `/static/${conv.contact_avatar}`;
         }
         avatarHTML = `<img src="${avatarSrc}" alt="${conv.contact_name}">`;
     } else {
         avatarHTML = `<div class="avatar-initial">${initial}</div>`;
     }
     
+    // Show context message (active deliveries)
+    const contextText = conv.context_message || 'No active deliveries';
+    
     return `
-        <div class="conversation-item" data-conversation-id="${conv.conversation_id}" data-delivery-id="${conv.delivery_id}">
+        <div class="conversation-item" data-conversation-id="${conv.conversation_id}" data-contact-id="${conv.contact_id}" data-contact-type="${conv.contact_type}">
             <div class="conversation-avatar">
                 ${avatarHTML}
             </div>
@@ -197,11 +217,11 @@ function createConversationItem(conv) {
                     <span class="conversation-time">${time}</span>
                 </div>
                 <div class="conversation-message">
-                    ${conv.last_message || 'Order #' + conv.order_number}
+                    ${conv.last_message || 'Start conversation'}
                     ${unreadBadge}
                 </div>
                 <div style="font-size: 11px; color: #65676b; margin-top: 2px;">
-                    ${conv.seller_shop} • ${conv.delivery_status}
+                    ${contextText}
                 </div>
             </div>
         </div>
@@ -214,20 +234,31 @@ function displayEmptyConversations() {
     
     if (!conversationsList) return;
     
+    const emptyMessage = activeTab === 'buyers' ? 
+        'No active deliveries with buyers' : 
+        'No active deliveries with sellers';
+    
     conversationsList.innerHTML = `
         <div class="empty-conversations">
             <i class="bi bi-chat-dots"></i>
-            <p>No active deliveries</p>
-            <p class="empty-subtitle">Accept deliveries to start chatting with buyers</p>
+            <p>${emptyMessage}</p>
+            <p class="empty-subtitle">Accept deliveries to start chatting</p>
         </div>
     `;
 }
 
 // Select conversation
-function selectConversation(convId, deliveryId) {
-    currentConversation = conversations.find(c => c.conversation_id === convId);
+function selectConversation(convId, contactId, contactType) {
+    // Find conversation from appropriate list
+    const conversations = contactType === 'buyer' ? buyerConversations : sellerConversations;
+    currentConversation = conversations.find(c => c.contact_id === contactId);
     
-    if (!currentConversation) return;
+    if (!currentConversation) {
+        console.error('❌ Conversation not found for contact_id:', contactId, 'type:', contactType);
+        return;
+    }
+    
+    console.log('✅ Selected conversation:', currentConversation);
     
     // Reset last message ID when switching conversations
     lastMessageId = 0;
@@ -236,68 +267,69 @@ function selectConversation(convId, deliveryId) {
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-conversation-id="${convId}"]`)?.classList.add('active');
+    
+    // Find and activate the conversation item
+    const conversationItem = document.querySelector(`[data-contact-id="${contactId}"][data-contact-type="${contactType}"]`);
+    if (conversationItem) {
+        conversationItem.classList.add('active');
+    }
     
     // Show chat header and input
     document.getElementById('chatHeader').style.display = 'flex';
     document.getElementById('messageInputContainer').style.display = 'flex';
     
-    // Re-enable input by default (will be disabled later if delivered)
+    // Check if there are active orders
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
-    if (messageInput) {
-        messageInput.disabled = false;
-        messageInput.placeholder = 'Type a message...';
-    }
-    if (sendBtn) sendBtn.disabled = false;
     
-    // Update contact info with proper URL handling
+    if (currentConversation.has_active_orders) {
+        // Has active orders - enable messaging
+        if (messageInput) {
+            messageInput.disabled = false;
+            messageInput.placeholder = 'Type a message...';
+        }
+        if (sendBtn) sendBtn.disabled = false;
+    } else {
+        // No active orders - disable messaging
+        if (messageInput) {
+            messageInput.disabled = true;
+            messageInput.placeholder = 'No active deliveries. Messaging is disabled.';
+        }
+        if (sendBtn) sendBtn.disabled = true;
+    }
+    
+    // Update contact info
     const contactAvatarDiv = document.querySelector('.contact-avatar');
     const contactAvatarImg = document.getElementById('contactAvatar');
     
-    console.log('🖼️ Setting avatar for:', currentConversation.contact_name);
-    console.log('📸 Avatar path:', currentConversation.contact_avatar);
-    
-    // Check if avatar exists and is not default
     const hasAvatar = currentConversation.contact_avatar && 
                      !currentConversation.contact_avatar.includes('default-avatar') && 
                      currentConversation.contact_avatar !== '/static/images/default-avatar.png';
     
-    console.log('✅ Has avatar:', hasAvatar);
-    
     if (hasAvatar) {
-        // Handle both Supabase URLs and local paths
         let avatarSrc;
         if (currentConversation.contact_avatar.startsWith('http://') || currentConversation.contact_avatar.startsWith('https://')) {
-            avatarSrc = currentConversation.contact_avatar; // Supabase URL
+            avatarSrc = currentConversation.contact_avatar;
         } else if (currentConversation.contact_avatar.startsWith('/static/')) {
-            avatarSrc = currentConversation.contact_avatar; // Already has /static/ prefix
+            avatarSrc = currentConversation.contact_avatar;
         } else if (currentConversation.contact_avatar.startsWith('static/')) {
-            avatarSrc = `/${currentConversation.contact_avatar}`; // Add leading slash
-        } else if (currentConversation.contact_avatar.startsWith('/')) {
-            avatarSrc = currentConversation.contact_avatar; // Has leading slash
+            avatarSrc = `/${currentConversation.contact_avatar}`;
         } else {
-            avatarSrc = `/static/${currentConversation.contact_avatar}`; // Relative path
+            avatarSrc = `/static/${currentConversation.contact_avatar}`;
         }
         
-        console.log('🎯 Final avatar src:', avatarSrc);
         contactAvatarImg.src = avatarSrc;
         contactAvatarImg.style.display = 'block';
         
-        // Remove any existing initial div
         const existingInitial = contactAvatarDiv.querySelector('.avatar-initial');
         if (existingInitial) existingInitial.remove();
     } else {
-        console.log('❌ No avatar, showing initial');
-        // Hide image and show initial
         contactAvatarImg.style.display = 'none';
         const initial = currentConversation.contact_name ? currentConversation.contact_name.charAt(0).toUpperCase() : 'U';
         
-        // Remove existing initial if any
         const existingInitial = contactAvatarDiv.querySelector('.avatar-initial');
         if (existingInitial) existingInitial.remove();
         
-        // Add new initial div
         const initialDiv = document.createElement('div');
         initialDiv.className = 'avatar-initial';
         initialDiv.textContent = initial;
@@ -305,26 +337,31 @@ function selectConversation(convId, deliveryId) {
     }
     
     document.getElementById('contactName').textContent = currentConversation.contact_name;
-    document.getElementById('contactStatus').textContent = `Order #${currentConversation.order_number} • ${currentConversation.delivery_status}`;
     
-    // Load messages (initial load)
-    loadMessages(deliveryId, true);
+    // Update status to show active deliveries context
+    const contextMessage = currentConversation.context_message || 'No active deliveries';
+    document.getElementById('contactStatus').textContent = contextMessage;
+    
+    // Load messages - use appropriate endpoint based on contact type
+    loadMessages(contactId, contactType, true);
 }
 
 // Load messages
-function loadMessages(deliveryId, isInitialLoad = false) {
-    fetch(`/rider/chat/api/messages/${deliveryId}`)
+function loadMessages(contactId, contactType, isInitialLoad = false) {
+    const endpoint = contactType === 'buyer' ? 
+        `/rider/chat/api/messages/${contactId}` : 
+        `/rider/chat/api/seller-messages/${contactId}`;
+    
+    fetch(endpoint)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 if (isInitialLoad) {
-                    // First load - display all messages
                     displayMessages(data.messages);
                     if (data.messages.length > 0) {
                         lastMessageId = data.messages[data.messages.length - 1].message_id;
                     }
                 } else {
-                    // Subsequent loads - only add new messages
                     const newMessages = data.messages.filter(msg => msg.message_id > lastMessageId);
                     if (newMessages.length > 0) {
                         appendNewMessages(newMessages);
@@ -361,24 +398,8 @@ function displayMessages(messages) {
     
     messagesArea.innerHTML = messages.map(msg => createMessageBubble(msg)).join('');
     
-    // Check if delivery is completed
-    if (currentConversation && currentConversation.delivery_status === 'delivered') {
-        messagesArea.innerHTML += `
-            <div style="text-align: center; padding: 20px; margin: 20px 0;">
-                <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; display: inline-block;">
-                    <i class="bi bi-check-circle" style="color: #4CAF50; font-size: 24px; margin-bottom: 8px; display: block;"></i>
-                    <p style="color: #666666; font-weight: 600; margin: 0;">Order Delivered</p>
-                    <p style="color: #999999; font-size: 13px; margin: 5px 0 0 0;">This conversation has ended</p>
-                </div>
-            </div>
-        `;
-        
-        // Disable message input
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        if (messageInput) messageInput.disabled = true;
-        if (sendBtn) sendBtn.disabled = true;
-    }
+    // Note: We no longer disable chat based on delivery status
+    // Profile-based conversations remain active even after deliveries complete
     
     // Scroll to bottom
     messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -473,9 +494,9 @@ function sendMessage() {
     messageInput.value = '';
     
     // Add temporary "sending" message with loading animation
-    const messagesContainer = document.getElementById('messagesContainer');
+    const messagesArea = document.getElementById('messagesArea');
     const tempMessageId = 'temp-' + Date.now();
-    if (messagesContainer) {
+    if (messagesArea) {
         const tempMessageHTML = `
             <div class="message sent" id="${tempMessageId}">
                 <div class="message-bubble">${escapeHtml(messageText)}</div>
@@ -488,8 +509,19 @@ function sendMessage() {
                 </div>
             </div>
         `;
-        messagesContainer.insertAdjacentHTML('beforeend', tempMessageHTML);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        messagesArea.insertAdjacentHTML('beforeend', tempMessageHTML);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+    
+    // Prepare request body based on contact type
+    const requestBody = {
+        message: messageText
+    };
+    
+    if (currentConversation.contact_type === 'buyer') {
+        requestBody.buyer_id = currentConversation.contact_id;
+    } else {
+        requestBody.seller_id = currentConversation.contact_id;
     }
     
     // Send to server
@@ -498,10 +530,7 @@ function sendMessage() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            delivery_id: currentConversation.delivery_id,
-            message: messageText
-        })
+        body: JSON.stringify(requestBody)
     })
     .then(response => response.json())
     .then(data => {
@@ -573,6 +602,8 @@ function addMessageToUI(message) {
 
 // Update conversation last message
 function updateConversationLastMessage(convId, message) {
+    // Update in appropriate list
+    const conversations = activeTab === 'buyers' ? buyerConversations : sellerConversations;
     const conv = conversations.find(c => c.conversation_id === convId);
     if (conv) {
         conv.last_message = message;
@@ -586,6 +617,7 @@ function updateConversationLastMessage(convId, message) {
 // Handle search
 function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
+    const conversations = activeTab === 'buyers' ? buyerConversations : sellerConversations;
     
     if (!searchTerm) {
         displayConversations(conversations);
@@ -594,8 +626,10 @@ function handleSearch(e) {
     
     const filtered = conversations.filter(conv => 
         conv.contact_name.toLowerCase().includes(searchTerm) ||
-        conv.order_number.toLowerCase().includes(searchTerm) ||
-        conv.seller_shop.toLowerCase().includes(searchTerm)
+        (conv.active_deliveries && conv.active_deliveries.some(d => 
+            d.order_number.toLowerCase().includes(searchTerm) ||
+            (d.shop_name && d.shop_name.toLowerCase().includes(searchTerm))
+        ))
     );
     
     displayConversations(filtered);
@@ -702,8 +736,8 @@ let conversationRefreshInterval = setInterval(() => {
 // Auto-refresh messages every 10 seconds if conversation is open (reduced from 5 seconds)
 // Only refresh if page is visible
 let messageRefreshInterval = setInterval(() => {
-    if (!document.hidden && currentConversation && currentConversation.delivery_id) {
-        loadMessages(currentConversation.delivery_id);
+    if (!document.hidden && currentConversation && currentConversation.contact_id) {
+        loadMessages(currentConversation.contact_id, currentConversation.contact_type);
     }
 }, 10000);
 
@@ -720,8 +754,8 @@ document.addEventListener('visibilitychange', function() {
         console.log('👁️ Page visible - resuming auto-refresh');
         // Immediately refresh when page becomes visible
         loadConversations();
-        if (currentConversation && currentConversation.delivery_id) {
-            loadMessages(currentConversation.delivery_id);
+        if (currentConversation && currentConversation.contact_id) {
+            loadMessages(currentConversation.contact_id, currentConversation.contact_type);
         }
     }
 });
