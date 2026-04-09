@@ -5,11 +5,51 @@ This module provides helper functions for interacting with Supabase database.
 
 from database.db_config import get_supabase_client
 from datetime import datetime, timedelta
+import time
+import httpx
 
 # Alias for backward compatibility
 def get_supabase():
     """Alias for get_supabase_client() for backward compatibility"""
     return get_supabase_client()
+
+def supabase_retry(func, max_retries=3, delay=1):
+    """
+    Retry wrapper for Supabase operations to handle network errors
+    
+    Args:
+        func: Function to execute
+        max_retries: Maximum number of retry attempts (default: 3)
+        delay: Delay in seconds between retries (default: 1)
+    
+    Returns:
+        Result of the function call
+    
+    Raises:
+        Exception: If all retries fail
+    """
+    last_exception = None
+    
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except (httpx.ConnectError, httpx.RemoteProtocolError, ConnectionError) as e:
+            last_exception = e
+            if attempt < max_retries - 1:
+                print(f"⚠️ Network error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                print(f"🔄 Retrying in {delay} second(s)...")
+                time.sleep(delay)
+                continue
+            else:
+                print(f"❌ All {max_retries} retry attempts failed")
+                raise e
+        except Exception as e:
+            # Don't retry for non-network errors
+            raise e
+    
+    # If we get here, all retries failed
+    if last_exception:
+        raise last_exception
 
 def clean_supabase_data(data):
     """Clean Supabase data by removing None values and converting types"""

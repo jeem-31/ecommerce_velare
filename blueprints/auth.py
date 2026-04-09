@@ -305,8 +305,12 @@ def login_post():
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
         
         try:
-            # Check if user exists in Supabase
-            response = supabase.table('users').select('*').eq('email', email).execute()
+            # Check if user exists in Supabase (with retry logic)
+            from database.supabase_helper import supabase_retry
+            
+            response = supabase_retry(
+                lambda: supabase.table('users').select('*').eq('email', email).execute()
+            )
             
             if not response.data or len(response.data) == 0:
                 return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
@@ -343,19 +347,25 @@ def login_post():
             # Get user's name and type-specific ID based on user type
             user_name = ''
             if user['user_type'] == 'buyer':
-                buyer_response = supabase.table('buyers').select('*').eq('user_id', user['user_id']).execute()
+                buyer_response = supabase_retry(
+                    lambda: supabase.table('buyers').select('*').eq('user_id', user['user_id']).execute()
+                )
                 if buyer_response.data:
                     buyer_data = buyer_response.data[0]
                     user_name = f"{buyer_data['first_name']} {buyer_data['last_name']}"
                     session['buyer_id'] = buyer_data['buyer_id']
             elif user['user_type'] == 'seller':
-                seller_response = supabase.table('sellers').select('*').eq('user_id', user['user_id']).execute()
+                seller_response = supabase_retry(
+                    lambda: supabase.table('sellers').select('*').eq('user_id', user['user_id']).execute()
+                )
                 if seller_response.data:
                     seller_data = seller_response.data[0]
                     user_name = seller_data.get('shop_name', f"{seller_data.get('first_name', '')} {seller_data.get('last_name', '')}")
                     session['seller_id'] = seller_data['seller_id']
             elif user['user_type'] == 'rider':
-                rider_response = supabase.table('riders').select('*').eq('user_id', user['user_id']).execute()
+                rider_response = supabase_retry(
+                    lambda: supabase.table('riders').select('*').eq('user_id', user['user_id']).execute()
+                )
                 if rider_response.data:
                     rider_data = rider_response.data[0]
                     user_name = f"{rider_data['first_name']} {rider_data['last_name']}"
