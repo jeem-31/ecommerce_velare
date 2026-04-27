@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
   <script defer src="{{ url_for('static', filename='js/search-anim.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/category-carousel.js') }}"></script>
 </head>
 <body>
     <!-- Hamburger menu outside header for proper z-index stacking -->
@@ -111,7 +112,7 @@
       <div class="carousel-track">
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='dresses-skirts') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/activewear.jpg') }}" alt="Dresses">
+            <img src="{{ url_for('static', filename='uploads/banners/dresses.jpeg') }}" alt="Dresses">
             <div class="card-overlay">
               <h3>Dresses</h3>
             </div>
@@ -119,7 +120,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='dresses-skirts') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/blouse.webp') }}" alt="Skirts">
+            <img src="{{ url_for('static', filename='uploads/banners/skirts.jpeg') }}" alt="Skirts">
             <div class="card-overlay">
               <h3>Skirts</h3>
             </div>
@@ -127,7 +128,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='tops-blouses') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/tops.webp') }}" alt="Tops">
+            <img src="{{ url_for('static', filename='uploads/banners/tops.jpeg') }}" alt="Tops">
             <div class="card-overlay">
               <h3>Tops</h3>
             </div>
@@ -135,7 +136,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='tops-blouses') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/blouse.webp') }}" alt="Blouses">
+            <img src="{{ url_for('static', filename='uploads/banners/blouses.jpeg') }}" alt="Blouses">
             <div class="card-overlay">
               <h3>Blouses</h3>
             </div>
@@ -143,7 +144,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='activewear-yoga') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/activewear (2).jpg') }}" alt="Activewear">
+            <img src="{{ url_for('static', filename='uploads/banners/activewear.jpeg') }}" alt="Activewear">
             <div class="card-overlay">
               <h3>Activewear</h3>
             </div>
@@ -151,7 +152,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='activewear-yoga') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/activewear.jpg') }}" alt="Yoga Pants">
+            <img src="{{ url_for('static', filename='uploads/banners/yogapants.jpeg') }}" alt="Yoga Pants">
             <div class="card-overlay">
               <h3>Yoga Pants</h3>
             </div>
@@ -159,7 +160,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='lingerie-sleepwear') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/lingerie.jpg') }}" alt="Lingerie">
+            <img src="{{ url_for('static', filename='uploads/banners/lingerie.jpeg') }}" alt="Lingerie">
             <div class="card-overlay">
               <h3>Lingerie</h3>
             </div>
@@ -167,7 +168,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='lingerie-sleepwear') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/lingerie.jpg') }}" alt="Sleepwear">
+            <img src="{{ url_for('static', filename='uploads/banners/sleepwear.jpeg') }}" alt="Sleepwear">
             <div class="card-overlay">
               <h3>Sleepwear</h3>
             </div>
@@ -175,7 +176,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='jackets-coats') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/tops.webp') }}" alt="Jackets">
+            <img src="{{ url_for('static', filename='uploads/banners/jackets.jpeg') }}" alt="Jackets">
             <div class="card-overlay">
               <h3>Jackets</h3>
             </div>
@@ -183,7 +184,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='jackets-coats') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/activewear.jpg') }}" alt="Coats">
+            <img src="{{ url_for('static', filename='uploads/banners/coats.jpeg') }}" alt="Coats">
             <div class="card-overlay">
               <h3>Coats</h3>
             </div>
@@ -191,7 +192,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='shoes-accessories') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/blouse.webp') }}" alt="Shoes">
+            <img src="{{ url_for('static', filename='uploads/banners/shoes.jpeg') }}" alt="Shoes">
             <div class="card-overlay">
               <h3>Shoes</h3>
             </div>
@@ -199,7 +200,7 @@
         </div>
         <div class="carousel-card">
           <a href="{{ url_for('browse_product.browse_product', category='shoes-accessories') }}" class="card-link">
-            <img src="{{ url_for('static', filename='uploads/banners/lingerie.jpg') }}" alt="Accessories">
+            <img src="{{ url_for('static', filename='uploads/banners/accessories.jpeg') }}" alt="Accessories">
             <div class="card-overlay">
               <h3>Accessories</h3>
             </div>
