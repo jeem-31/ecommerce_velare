@@ -178,6 +178,8 @@ def get_rider_conversations_api():
         # Get buyer conversations
         buyer_conversations = []
         for buyer_id, buyer_data in buyers_map.items():
+            print(f"\n  🔍 Processing buyer {buyer_id}...")
+            
             # Get buyer info
             buyer_response = supabase.table('buyers').select('''
                 buyer_id,
@@ -187,10 +189,14 @@ def get_rider_conversations_api():
                 phone_number
             ''').eq('buyer_id', buyer_id).execute()
             
+            print(f"  📊 Buyer query response: {buyer_response.data}")
+            
             if not buyer_response.data:
+                print(f"  ❌ No buyer data found for buyer_id {buyer_id} - SKIPPING")
                 continue
             
             buyer = buyer_response.data[0]
+            print(f"  ✅ Buyer found: {buyer.get('first_name')} {buyer.get('last_name')}")
             
             # Check if conversation exists
             conv_response = supabase.table('conversations').select('''
@@ -221,19 +227,18 @@ def get_rider_conversations_api():
                 except:
                     formatted_time = None
             
-            # Fix buyer profile image path
+            # Get buyer profile image (Supabase URL)
             buyer_profile_image = buyer.get('profile_image')
-            if buyer_profile_image:
-                if buyer_profile_image.startswith('http://') or buyer_profile_image.startswith('https://'):
-                    buyer_avatar = buyer_profile_image
-                elif buyer_profile_image.startswith('/static/'):
-                    buyer_avatar = buyer_profile_image
-                elif buyer_profile_image.startswith('static/'):
-                    buyer_avatar = '/' + buyer_profile_image
-                else:
-                    buyer_avatar = '/static/' + buyer_profile_image
+            print(f"  📸 Profile image from DB: {buyer_profile_image}")
+            
+            # Use Supabase URL directly or default avatar
+            if buyer_profile_image and (buyer_profile_image.startswith('http://') or buyer_profile_image.startswith('https://')):
+                buyer_avatar = buyer_profile_image
             else:
+                # No valid Supabase URL - use default
                 buyer_avatar = '/static/images/default-avatar.png'
+            
+            print(f"  ✅ Avatar URL: {buyer_avatar}")
             
             # Create context message - show active deliveries first, then delivered
             if buyer_data['active_deliveries']:
@@ -306,20 +311,14 @@ def get_rider_conversations_api():
                 except:
                     formatted_time = None
             
-            # Fix seller profile image path
+            # Get seller shop logo (Supabase URL)
             seller_profile_image = seller.get('shop_logo')
-            if seller_profile_image:
-                if seller_profile_image.startswith('http://') or seller_profile_image.startswith('https://'):
-                    seller_avatar = seller_profile_image
-                elif seller_profile_image.startswith('/static/'):
-                    seller_avatar = seller_profile_image
-                elif seller_profile_image.startswith('static/'):
-                    seller_avatar = '/' + seller_profile_image
-                elif seller_profile_image.startswith('uploads/'):
-                    seller_avatar = '/static/' + seller_profile_image
-                else:
-                    seller_avatar = '/static/' + seller_profile_image
+            
+            # Use Supabase URL directly or default avatar
+            if seller_profile_image and (seller_profile_image.startswith('http://') or seller_profile_image.startswith('https://')):
+                seller_avatar = seller_profile_image
             else:
+                # No valid Supabase URL - use default
                 seller_avatar = '/static/images/default-avatar.png'
             
             # Create context message - show active deliveries first, then delivered

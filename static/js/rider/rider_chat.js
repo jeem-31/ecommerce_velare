@@ -183,23 +183,23 @@ function createConversationItem(conv) {
     // Get first letter of contact name for initial
     const initial = conv.contact_name ? conv.contact_name.charAt(0).toUpperCase() : 'U';
     
-    // Check if avatar exists and is not default
+    // Debug: Log avatar info
+    console.log(`🖼️ Avatar for ${conv.contact_name}:`, conv.contact_avatar);
+    
+    // Check if avatar is a valid Supabase URL
     const hasAvatar = conv.contact_avatar && 
-                     !conv.contact_avatar.includes('default-avatar') && 
-                     conv.contact_avatar !== '/static/images/default-avatar.png';
+                     conv.contact_avatar.trim() !== '' &&
+                     (conv.contact_avatar.startsWith('http://') || conv.contact_avatar.startsWith('https://')) &&
+                     !conv.contact_avatar.includes('default-avatar');
+    
+    console.log(`  Has valid Supabase avatar: ${hasAvatar}`);
     
     let avatarHTML;
     if (hasAvatar) {
-        let avatarSrc;
-        if (conv.contact_avatar.startsWith('http://') || conv.contact_avatar.startsWith('https://')) {
-            avatarSrc = conv.contact_avatar;
-        } else if (conv.contact_avatar.startsWith('static/')) {
-            avatarSrc = `/${conv.contact_avatar}`;
-        } else {
-            avatarSrc = `/static/${conv.contact_avatar}`;
-        }
-        avatarHTML = `<img src="${avatarSrc}" alt="${conv.contact_name}">`;
+        console.log(`  Avatar URL: ${conv.contact_avatar}`);
+        avatarHTML = `<img src="${conv.contact_avatar}" alt="${conv.contact_name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'avatar-initial\\'>${initial}</div>';">`;
     } else {
+        console.log(`  Using initial: ${initial}`);
         avatarHTML = `<div class="avatar-initial">${initial}</div>`;
     }
     

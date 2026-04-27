@@ -122,7 +122,7 @@ function viewReportDetail(reportId) {
             ${report.evidence_image ? `
             <div class="mb-3">
                 <h6>Evidence</h6>
-                <img src="/${report.evidence_image}" class="img-fluid" style="max-height: 300px;">
+                <img src="${report.evidence_image.startsWith('http') ? report.evidence_image : '/' + report.evidence_image}" class="img-fluid" style="max-height: 300px;" onerror="this.onerror=null; this.src='/static/images/no-image.png'; this.alt='Image not available';">
             </div>
             ` : ''}
             ${report.admin_notes ? `

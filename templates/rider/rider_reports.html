@@ -985,7 +985,7 @@
                 ${report.evidence_image ? `
                 <div class="detail-item full-width">
                     <span class="detail-label">Evidence:</span>
-                    <img src="/${report.evidence_image}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;">
+                    <img src="${report.evidence_image.startsWith('http') ? report.evidence_image : '/' + report.evidence_image}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" onerror="this.onerror=null; this.src='/static/images/no-image.png'; this.alt='Image not available';">
                 </div>
                 ` : ''}
                 ${report.admin_notes ? `

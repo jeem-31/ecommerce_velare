@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from database.supabase_helper import *
 from werkzeug.utils import secure_filename
 import os
+import uuid
 from datetime import datetime
 
 rider_report_user_bp = Blueprint('rider_report_user', __name__)
@@ -130,17 +131,53 @@ def submit_report():
         reported_user_id = user_response.data[0]['user_id']
         print(f"👤 Reported user_id: {reported_user_id}")
         
-        # Handle file upload
-        evidence_path = None
+        # Handle file upload to Supabase Storage
+        evidence_url = None
         if 'evidence' in request.files:
             file = request.files['evidence']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
-                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                evidence_path = file_path.replace('\\', '/')
-                print(f"📸 Evidence uploaded: {filename}")
+                try:
+                    # Generate unique filename
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    unique_id = str(uuid.uuid4())[:8]
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"static/uploads/reports/report_{timestamp}_{unique_id}_{filename}"
+                    
+                    print(f"📤 Uploading evidence to Supabase: {unique_filename}")
+                    
+                    # Read file content
+                    file.seek(0)
+                    file_content = file.read()
+                    
+                    print(f"📦 Content type: {file.content_type}")
+                    print(f"📦 Content length: {len(file_content)} bytes")
+                    
+                    # Upload to Supabase Storage bucket "Images"
+                    upload_response = supabase.storage.from_('Images').upload(
+                        path=unique_filename,
+                        file=file_content,
+                        file_options={"content-type": file.content_type or 'image/jpeg'}
+                    )
+                    
+                    print(f"📤 Upload response: {upload_response}")
+                    
+                    # Check if upload was successful
+                    if not upload_response:
+                        raise Exception("Upload failed - no response from Supabase")
+                    
+                    # Get public URL
+                    evidence_url = supabase.storage.from_('Images').get_public_url(unique_filename)
+                    
+                    print(f"✅ Evidence uploaded successfully!")
+                    print(f"📍 Public URL: {evidence_url}")
+                    print(f"📏 URL length: {len(evidence_url)} characters")
+                    
+                except Exception as upload_error:
+                    print(f"❌ Error uploading evidence: {upload_error}")
+                    import traceback
+                    traceback.print_exc()
+                    # Continue without evidence if upload fails
+                    evidence_url = None
         
         # Insert report using helper function
         report_data = {
@@ -159,8 +196,8 @@ def submit_report():
             report_data['order_id'] = order_id
         if delivery_id:
             report_data['delivery_id'] = delivery_id
-        if evidence_path:
-            report_data['evidence_image'] = evidence_path
+        if evidence_url:
+            report_data['evidence_image'] = evidence_url
         
         report = insert_user_report(report_data)
         
@@ -169,6 +206,7 @@ def submit_report():
             return jsonify({'success': False, 'message': 'Failed to submit report'}), 500
         
         print(f"✅ Report created: {report.get('report_id')}")
+        print(f"📸 Evidence URL saved: {report.get('evidence_image', 'None')}")
         
         # Update report count
         report_count = get_user_report_count(reported_user_id)
@@ -186,7 +224,7 @@ def submit_report():
             seller_response = supabase.table('sellers').select('seller_id').eq('user_id', reported_user_id).execute()
             if seller_response.data:
                 seller_id = seller_response.data[0]['seller_id']
-                update_seller_report_count(seller_id, report_count)
+                update_seller_report_count(seller_id)
                 print(f"✅ Updated seller report count")
         
         # Send notification to the reported user

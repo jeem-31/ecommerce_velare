@@ -142,18 +142,51 @@ def update_profile():
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
         
         try:
-            # Handle profile image upload
+            # Handle profile image upload to Supabase Storage
             profile_image_path = None
             if 'profile_image' in request.files:
                 file = request.files['profile_image']
                 if file and file.filename and allowed_file(file.filename):
                     try:
-                        filename = secure_filename(f"buyer_{user_id}_{file.filename}")
-                        file_path = os.path.join(UPLOAD_FOLDER, filename)
-                        file.save(file_path)
-                        profile_image_path = f"/static/uploads/profiles/{filename}"
+                        import uuid
+                        from datetime import datetime
+                        
+                        # Generate unique filename
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        unique_id = str(uuid.uuid4())[:8]
+                        filename = secure_filename(file.filename)
+                        unique_filename = f"static/uploads/profiles/buyer_{user_id}_{timestamp}_{unique_id}_{filename}"
+                        
+                        print(f"📤 Uploading profile image to Supabase: {unique_filename}")
+                        
+                        # Read file content
+                        file.seek(0)
+                        file_content = file.read()
+                        
+                        print(f"📦 Content type: {file.content_type}")
+                        print(f"📦 Content length: {len(file_content)} bytes")
+                        
+                        # Upload to Supabase Storage bucket "Images"
+                        upload_response = supabase.storage.from_('Images').upload(
+                            path=unique_filename,
+                            file=file_content,
+                            file_options={"content-type": file.content_type or 'image/jpeg'}
+                        )
+                        
+                        print(f"📤 Upload response: {upload_response}")
+                        
+                        if not upload_response:
+                            raise Exception("Upload failed - no response from Supabase")
+                        
+                        # Get public URL
+                        profile_image_path = supabase.storage.from_('Images').get_public_url(unique_filename)
+                        
+                        print(f"✅ Profile image uploaded to Supabase: {profile_image_path}")
+                        
                     except Exception as e:
-                        print(f"File upload error: {e}")
+                        print(f"❌ File upload error: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return jsonify({'success': False, 'message': 'Failed to upload profile image'}), 500
             
             # Build update data for buyers table

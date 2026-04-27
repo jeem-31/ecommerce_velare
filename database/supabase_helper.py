@@ -461,6 +461,8 @@ def update_buyer_profile_supabase(user_id, profile_data):
             buyer_fields['last_name'] = profile_data['last_name']
         if 'phone_number' in profile_data:
             buyer_fields['phone_number'] = profile_data['phone_number']
+        if 'gender' in profile_data:
+            buyer_fields['gender'] = profile_data['gender']
         if 'profile_image' in profile_data:
             buyer_fields['profile_image'] = profile_data['profile_image']
         if 'address' in profile_data:
@@ -473,11 +475,16 @@ def update_buyer_profile_supabase(user_id, profile_data):
             buyer_fields['postal_code'] = profile_data['postal_code']
         
         if buyer_fields:
-            supabase.table('buyers').update(buyer_fields).eq('user_id', user_id).execute()
+            print(f"🔄 Updating buyer profile for user_id {user_id}")
+            print(f"📝 Fields to update: {buyer_fields.keys()}")
+            response = supabase.table('buyers').update(buyer_fields).eq('user_id', user_id).execute()
+            print(f"✅ Update response: {response.data}")
         
         return True
     except Exception as e:
         print(f"❌ Error updating buyer profile: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def update_user_email_supabase(user_id, email):
@@ -950,21 +957,33 @@ def accept_delivery_supabase(delivery_id, rider_id):
 
 
 def get_rider_active_deliveries(rider_id):
-    """Get all active deliveries assigned to a specific rider"""
+    """
+    Get all active deliveries assigned to a specific rider.
+    Includes:
+    - assigned: Waiting for pickup
+    - in_transit: On the way to buyer
+    - delivered with order_received=0: Awaiting buyer confirmation
+    """
     try:
         supabase = get_supabase_client()
-        response = supabase.table('deliveries').select('''
+        
+        # Get deliveries with status assigned or in_transit (exclude cancelled orders)
+        response1 = supabase.table('deliveries').select('''
             delivery_id,
             order_id,
             pickup_address,
             delivery_address,
             delivery_fee,
+            rider_earnings,
             status,
+            assigned_at,
             picked_up_at,
             delivered_at,
-            orders (
+            orders!inner (
                 order_number,
                 total_amount,
+                order_status,
+                order_received,
                 buyer_id,
                 seller_id,
                 buyers (
@@ -977,11 +996,53 @@ def get_rider_active_deliveries(rider_id):
                     phone_number
                 )
             )
-        ''').eq('rider_id', rider_id).in_('status', ['assigned', 'in_transit']).execute()
+        ''').eq('rider_id', rider_id).in_('status', ['assigned', 'in_transit']).neq('orders.order_status', 'cancelled').execute()
         
-        return response.data if response.data else []
+        # Get delivered orders that are awaiting buyer confirmation (order_received = False, exclude cancelled)
+        response2 = supabase.table('deliveries').select('''
+            delivery_id,
+            order_id,
+            pickup_address,
+            delivery_address,
+            delivery_fee,
+            rider_earnings,
+            status,
+            assigned_at,
+            picked_up_at,
+            delivered_at,
+            orders!inner (
+                order_number,
+                total_amount,
+                order_status,
+                order_received,
+                buyer_id,
+                seller_id,
+                buyers (
+                    first_name,
+                    last_name,
+                    phone_number
+                ),
+                sellers (
+                    shop_name,
+                    phone_number
+                )
+            )
+        ''').eq('rider_id', rider_id).eq('status', 'delivered').eq('orders.order_received', False).neq('orders.order_status', 'cancelled').execute()
+        
+        # Combine both results
+        all_deliveries = []
+        if response1.data:
+            all_deliveries.extend(response1.data)
+        if response2.data:
+            all_deliveries.extend(response2.data)
+        
+        print(f"📦 Active deliveries: {len(response1.data or [])} in progress + {len(response2.data or [])} awaiting confirmation")
+        
+        return all_deliveries
     except Exception as e:
         print(f"❌ Error getting rider active deliveries: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 
@@ -1006,7 +1067,7 @@ def mark_delivery_picked_up(delivery_id):
         return False
 
 def mark_delivery_delivered(delivery_id):
-    """Mark a delivery as delivered (completed)"""
+    """Mark a delivery as delivered (awaiting buyer confirmation)"""
     try:
         from datetime import datetime
         supabase = get_supabase_client()
@@ -1018,16 +1079,17 @@ def mark_delivery_delivered(delivery_id):
         }).eq('delivery_id', delivery_id).execute()
         
         if response.data:
-            print(f"✅ Delivery {delivery_id} marked as delivered")
+            print(f"✅ Delivery {delivery_id} marked as delivered (awaiting confirmation)")
             
-            # Also update the order status to delivered
+            # Update order status to delivered BUT order_received = False (awaiting confirmation)
             delivery = response.data[0]
             order_id = delivery.get('order_id')
             if order_id:
                 supabase.table('orders').update({
-                    'order_status': 'delivered'
+                    'order_status': 'delivered',
+                    'order_received': False  # Awaiting buyer confirmation
                 }).eq('order_id', order_id).execute()
-                print(f"✅ Order {order_id} marked as delivered")
+                print(f"✅ Order {order_id} marked as delivered (awaiting buyer confirmation)")
             
             return True
         return False

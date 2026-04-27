@@ -138,7 +138,7 @@ function displayActiveDeliveryData(deliveryData) {
 
 // Create delivery row HTML
 function createDeliveryRow(item, index) {
-    // Determine button based on status
+    // Determine button based on status and order_received
     let actionButton = '';
     if (item.status === 'assigned') {
         actionButton = `
@@ -152,10 +152,18 @@ function createDeliveryRow(item, index) {
                 <i class="bi bi-check-circle"></i> Item Delivered
             </button>
         `;
-    } else if (item.status === 'delivered') {
+    } else if (item.status === 'delivered' && item.order_received === false) {
+        // Delivered but awaiting buyer confirmation
         actionButton = `
-            <button class="btn-delivered disabled" disabled>
+            <button class="btn-awaiting disabled" disabled>
                 <i class="bi bi-clock-history"></i> Awaiting Confirmation
+            </button>
+        `;
+    } else if (item.status === 'delivered' && item.order_received === true) {
+        // Order received by buyer - should not appear in active deliveries
+        actionButton = `
+            <button class="btn-completed disabled" disabled>
+                <i class="bi bi-check-circle-fill"></i> Completed
             </button>
         `;
     }

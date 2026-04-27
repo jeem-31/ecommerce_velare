@@ -36,7 +36,11 @@
     {% if report.evidence_image %}
     <div class="mb-3">
         <h6>Evidence</h6>
-        <img src="/{{ report.evidence_image }}" alt="Evidence" class="img-fluid" style="max-height: 300px;">
+        {% if report.evidence_image.startswith('http') %}
+        <img src="{{ report.evidence_image }}" alt="Evidence" class="img-fluid" style="max-height: 300px;" onerror="this.onerror=null; this.src='/static/images/no-image.png'; this.alt='Image not available';">
+        {% else %}
+        <img src="/{{ report.evidence_image }}" alt="Evidence" class="img-fluid" style="max-height: 300px;" onerror="this.onerror=null; this.src='/static/images/no-image.png'; this.alt='Image not available';">
+        {% endif %}
     </div>
     {% endif %}
 
