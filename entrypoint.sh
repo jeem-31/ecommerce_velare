@@ -26,13 +26,13 @@ python -c "from database.db_config import get_supabase_client; client = get_supa
 echo "🚀 Starting Gunicorn..."
 echo "=========================================="
 
-# Start gunicorn
+# Start gunicorn with less verbose logging
 exec gunicorn \
     --bind 0.0.0.0:${PORT:-5000} \
     --workers 2 \
     --timeout 120 \
     --access-logfile - \
     --error-logfile - \
-    --log-level debug \
+    --log-level info \
     --capture-output \
     app:app
