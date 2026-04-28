@@ -29,8 +29,12 @@ RUN mkdir -p static/uploads/products \
              static/uploads/rider_dl \
              static/uploads/banners
 
+# Copy and set permissions for entrypoint
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
 # Expose port (Railway will override this)
 EXPOSE 5000
 
-# Use gunicorn for production
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+# Use entrypoint script
+CMD ["./entrypoint.sh"]
