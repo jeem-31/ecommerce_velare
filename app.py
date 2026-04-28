@@ -64,6 +64,13 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'velare-secret-key-2025'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file upload
 app.config['TEMPLATES_AUTO_RELOAD'] = os.environ.get('FLASK_ENV') != 'production'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 if os.environ.get('FLASK_ENV') != 'production' else 31536000
+
+# Session configuration for production (Railway)
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+app.config['SESSION_COOKIE_NAME'] = 'velare_session'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching
 
 # Initialize Flask-Mail
