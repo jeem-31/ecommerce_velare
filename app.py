@@ -1,4 +1,9 @@
 from flask import Flask
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Import individual page blueprints
 from blueprints.auth import auth_bp
@@ -55,9 +60,10 @@ from blueprints.admin_user_reports import admin_user_reports_bp
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'velare-secret-key-2025'  # Change this to a random secret key
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'velare-secret-key-2025')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file upload
-app.config['TEMPLATES_AUTO_RELOAD'] = True  # Auto-reload templates
+app.config['TEMPLATES_AUTO_RELOAD'] = os.environ.get('FLASK_ENV') != 'production'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 if os.environ.get('FLASK_ENV') != 'production' else 31536000
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching
 
 # Initialize Flask-Mail
