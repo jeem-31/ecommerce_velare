@@ -5,18 +5,23 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # Mount code for development (hot reload)
-      - .:/app
-      # Persist uploads
+      # Only mount uploads directory (not entire code)
       - ./static/uploads:/app/static/uploads
     environment:
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - PORT=5000
     env_file:
       - .env
     restart: unless-stopped
     networks:
       - velare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   velare-network:
