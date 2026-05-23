@@ -75,9 +75,12 @@ def get_seller_reviews():
                 }
             }), 200
         
-        # Build query for reviews
+        # Build query for reviews. We deliberately omit the orders embed because
+        # PostgREST's schema cache may not have the product_reviews -> orders FK
+        # registered. We fetch order_numbers in a single batched query below.
         reviews_query = supabase.table('product_reviews').select(
-            'review_id, product_id, rating, review_text, created_at, buyer_id, order_id, products(product_name), buyers(first_name, last_name), orders(order_number)'
+            'review_id, product_id, rating, review_text, created_at, buyer_id, order_id, '
+            'products(product_name), buyers(first_name, last_name)'
         ).in_('product_id', product_ids)
         
         # Add date range filtering if provided
@@ -89,6 +92,19 @@ def get_seller_reviews():
         
         reviews_response = reviews_query.order('created_at', desc=True).execute()
         print(f"📦 Found {len(reviews_response.data) if reviews_response.data else 0} reviews")
+
+        # Batch-fetch order_numbers for the order_ids referenced in the reviews.
+        order_numbers_by_id = {}
+        if reviews_response.data:
+            order_ids = list({r['order_id'] for r in reviews_response.data if r.get('order_id') is not None})
+            if order_ids:
+                orders_response = supabase.table('orders').select(
+                    'order_id, order_number'
+                ).in_('order_id', order_ids).execute()
+                if orders_response.data:
+                    order_numbers_by_id = {
+                        o['order_id']: o.get('order_number') for o in orders_response.data
+                    }
         
         # Format reviews data
         reviews = []
@@ -97,8 +113,8 @@ def get_seller_reviews():
                 # Flatten nested data
                 product_data = review.get('products', {})
                 buyer_data = review.get('buyers', {})
-                order_data = review.get('orders', {})
-                
+                order_number = order_numbers_by_id.get(review.get('order_id')) or 'N/A'
+
                 formatted_review = {
                     'review_id': review['review_id'],
                     'product_id': review['product_id'],
@@ -107,7 +123,7 @@ def get_seller_reviews():
                     'created_at': review['created_at'],
                     'product_name': product_data.get('product_name') if product_data else 'Unknown Product',
                     'buyer_name': f"{buyer_data.get('first_name', '')} {buyer_data.get('last_name', '')}".strip() if buyer_data else 'Unknown Buyer',
-                    'order_number': order_data.get('order_number') if order_data else 'N/A'
+                    'order_number': order_number
                 }
                 reviews.append(formatted_review)
         
@@ -127,24 +143,32 @@ def get_seller_reviews():
         
         print(f"📊 Statistics: total={total_reviews}, avg={avg_rating:.1f}, positive={positive_percentage:.0f}%")
         
-        # Get product quality analysis - fetch all reviews for each product
+        # Get product quality analysis - batch fetch all reviews for all products in one query
         product_ratings = []
-        for product_id in product_ids:
-            product_reviews_response = supabase.table('product_reviews').select(
-                'rating, products(product_name)'
-            ).eq('product_id', product_id).execute()
-            
-            if product_reviews_response.data and len(product_reviews_response.data) > 0:
-                ratings = [r['rating'] for r in product_reviews_response.data]
-                avg_rating_product = sum(ratings) / len(ratings)
-                product_name = product_reviews_response.data[0].get('products', {}).get('product_name', 'Unknown')
-                
-                product_ratings.append({
-                    'product_id': product_id,
-                    'product_name': product_name,
-                    'avg_rating': avg_rating_product,
-                    'review_count': len(ratings)
-                })
+        all_reviews_response = supabase.table('product_reviews').select(
+            'product_id, rating, products(product_name)'
+        ).in_('product_id', product_ids).execute()
+
+        # Group ratings by product_id
+        ratings_by_product = {}
+        names_by_product = {}
+        if all_reviews_response.data:
+            for r in all_reviews_response.data:
+                pid = r['product_id']
+                ratings_by_product.setdefault(pid, []).append(r['rating'])
+                if pid not in names_by_product:
+                    product_data = r.get('products') or {}
+                    names_by_product[pid] = product_data.get('product_name', 'Unknown')
+
+        for pid, ratings in ratings_by_product.items():
+            if not ratings:
+                continue
+            product_ratings.append({
+                'product_id': pid,
+                'product_name': names_by_product.get(pid, 'Unknown'),
+                'avg_rating': sum(ratings) / len(ratings),
+                'review_count': len(ratings)
+            })
         
         # Sort by average rating
         product_ratings.sort(key=lambda x: x['avg_rating'], reverse=True)

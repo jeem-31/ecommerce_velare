@@ -114,6 +114,7 @@ function startNotificationPolling() {
     
     console.log('Starting notification polling (every 30 seconds)');
     notificationInterval = setInterval(() => {
+        if (document.hidden) return;
         console.log('Polling for new messages...');
         checkUnreadMessages();
     }, 30000); // Check every 30 seconds

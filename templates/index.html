@@ -145,15 +145,15 @@
                 {% if latest_products and latest_products|length > 0 and latest_products[0].image_url %}
                     <a href="{{ url_for('browse_product.browse_product', filter='new-arrivals') }}" class="image-link">
                         {% if latest_products[0].image_url.startswith('http://') or latest_products[0].image_url.startswith('https://') %}
-                            <img src="{{ latest_products[0].image_url }}" alt="{{ latest_products[0].product_name }}" class="sample-image">
+                            <img src="{{ latest_products[0].image_url }}" alt="{{ latest_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% else %}
-                            <img src="{{ url_for('static', filename=latest_products[0].image_url) }}" alt="{{ latest_products[0].product_name }}" class="sample-image">
+                            <img src="{{ url_for('static', filename=latest_products[0].image_url) }}" alt="{{ latest_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% endif %}
                     </a>
                     <a href="{{ url_for('browse_product.browse_product', filter='new-arrivals') }}" class="image-label">What's New</a>
                 {% else %}
                     <a href="{{ url_for('browse_product.browse_product', filter='new-arrivals') }}" class="image-link">
-                        <img src="{{ url_for('static', filename='images/sampleimage3.webp') }}" alt="Latest" class="sample-image">
+                        <img src="{{ url_for('static', filename='images/sampleimage3.webp') }}" alt="Latest" class="sample-image" loading="lazy" decoding="async">
                     </a>
                     <a href="{{ url_for('browse_product.browse_product', filter='new-arrivals') }}" class="image-label">What's New</a>
                 {% endif %}
@@ -176,15 +176,15 @@
                 {% if top_rated_products and top_rated_products|length > 0 and top_rated_products[0].image_url %}
                     <a href="{{ url_for('browse_product.browse_product', filter='top-rated') }}" class="image-link">
                         {% if top_rated_products[0].image_url.startswith('http://') or top_rated_products[0].image_url.startswith('https://') %}
-                            <img src="{{ top_rated_products[0].image_url }}" alt="{{ top_rated_products[0].product_name }}" class="sample-image">
+                            <img src="{{ top_rated_products[0].image_url }}" alt="{{ top_rated_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% else %}
-                            <img src="{{ url_for('static', filename=top_rated_products[0].image_url) }}" alt="{{ top_rated_products[0].product_name }}" class="sample-image">
+                            <img src="{{ url_for('static', filename=top_rated_products[0].image_url) }}" alt="{{ top_rated_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% endif %}
                     </a>
                     <a href="{{ url_for('browse_product.browse_product', filter='top-rated') }}" class="image-label">Beloved by Connoisseurs</a>
                 {% else %}
                     <a href="{{ url_for('browse_product.browse_product', filter='top-rated') }}" class="image-link">
-                        <img src="{{ url_for('static', filename='images/sampleimage4.webp') }}" alt="Top Rated" class="sample-image">
+                        <img src="{{ url_for('static', filename='images/sampleimage4.webp') }}" alt="Top Rated" class="sample-image" loading="lazy" decoding="async">
                     </a>
                     <a href="{{ url_for('browse_product.browse_product', filter='top-rated') }}" class="image-label">Beloved by Connoisseurs</a>
                 {% endif %}
@@ -207,15 +207,15 @@
                 {% if random_products and random_products|length > 0 and random_products[0].image_url %}
                     <a href="{{ url_for('browse_product.browse_product') }}" class="image-link">
                         {% if random_products[0].image_url.startswith('http://') or random_products[0].image_url.startswith('https://') %}
-                            <img src="{{ random_products[0].image_url }}" alt="{{ random_products[0].product_name }}" class="sample-image">
+                            <img src="{{ random_products[0].image_url }}" alt="{{ random_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% else %}
-                            <img src="{{ url_for('static', filename=random_products[0].image_url) }}" alt="{{ random_products[0].product_name }}" class="sample-image">
+                            <img src="{{ url_for('static', filename=random_products[0].image_url) }}" alt="{{ random_products[0].product_name }}" class="sample-image" loading="lazy" decoding="async">
                         {% endif %}
                     </a>
                     <a href="{{ url_for('browse_product.browse_product') }}" class="image-label">The Art of Choice</a>
                 {% else %}
                     <a href="{{ url_for('browse_product.browse_product') }}" class="image-link">
-                        <img src="{{ url_for('static', filename='images/sampleimage5.webp') }}" alt="Random Product" class="sample-image">
+                        <img src="{{ url_for('static', filename='images/sampleimage5.webp') }}" alt="Random Product" class="sample-image" loading="lazy" decoding="async">
                     </a>
                     <a href="{{ url_for('browse_product.browse_product') }}" class="image-label">The Art of Choice</a>
                 {% endif %}

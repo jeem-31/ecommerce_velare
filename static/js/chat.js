@@ -240,9 +240,12 @@
             }
         }, 200);
         
-        // Start polling for new messages
+        // Start polling for new messages (skipped while tab is hidden)
         if (!messagePollingInterval) {
-            messagePollingInterval = setInterval(pollForNewMessages, 5000); // Poll every 5 seconds
+            messagePollingInterval = setInterval(() => {
+                if (document.hidden) return;
+                pollForNewMessages();
+            }, 5000); // Poll every 5 seconds
         }
     }
     
@@ -1140,8 +1143,10 @@
         }
     };
 
-    // Auto-refresh conversations every 5 seconds (to update the 20-second filter)
+    // Auto-refresh conversations every 5 seconds (to update the 20-second filter).
+    // Skipped while tab is hidden so we don't compete with foreground navigation.
     setInterval(() => {
+        if (document.hidden) return;
         // Only refresh if chat window is open and not searching
         const chatWindow = document.getElementById('chat-window');
         if (chatWindow && chatWindow.classList.contains('chat-window-visible')) {

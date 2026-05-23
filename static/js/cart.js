@@ -449,8 +449,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize totals
     updateCartTotals();
     
-    // Periodic stock status check (every 5 seconds)
+    // Periodic stock status check (every 5 seconds, skipped while tab is hidden)
     setInterval(function() {
+        if (document.hidden) return;
         checkCartStockStatus();
     }, 5000);
 });

@@ -17,6 +17,50 @@ const chatContactName = document.getElementById('chatContactName');
 const chatContactType = document.getElementById('chatContactType');
 const chatAvatar = document.getElementById('chatAvatar');
 
+// Avatar helpers ------------------------------------------------------------
+// A contact is considered to have a real avatar only when the URL is set and
+// is not pointing at the placeholder default avatar.
+function hasContactAvatar(rawAvatar) {
+    return Boolean(
+        rawAvatar &&
+        !rawAvatar.includes('default-avatar') &&
+        rawAvatar !== '/static/images/default-avatar.png'
+    );
+}
+
+// Normalize avatar URLs so they work whether they come back as Supabase URLs
+// or as local /static or static/ paths.
+function resolveAvatarSrc(rawAvatar) {
+    if (!rawAvatar) return '';
+    if (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://')) return rawAvatar;
+    if (rawAvatar.startsWith('/static/')) return rawAvatar;
+    if (rawAvatar.startsWith('static/')) return `/${rawAvatar}`;
+    return `/static/${rawAvatar}`;
+}
+
+// Get the first letter of the contact's name for the initial fallback.
+function getContactInitial(name) {
+    return name && name.trim() ? name.trim().charAt(0).toUpperCase() : 'U';
+}
+
+// Build the avatar HTML used for the chat header, message bubbles, and
+// conversation list. Falls back to a styled initial circle when there is no
+// avatar, and uses onerror to fall back when the image URL is broken.
+function buildAvatarHTML(rawAvatar, name, sizeClass) {
+    const initial = getContactInitial(name);
+    const safeName = escapeHtml(name || 'User');
+    const sizeAttr = sizeClass ? ` ${sizeClass}` : '';
+
+    if (!hasContactAvatar(rawAvatar)) {
+        return `<div class="avatar-initial${sizeAttr}">${initial}</div>`;
+    }
+
+    const src = resolveAvatarSrc(rawAvatar);
+    const fallback = `<div class=&quot;avatar-initial${sizeAttr}&quot;>${initial}</div>`;
+    return `<img src="${src}" alt="${safeName}" onerror="this.outerHTML='${fallback}'">`;
+}
+// ---------------------------------------------------------------------------
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Seller Messages - Initializing...');
@@ -281,39 +325,9 @@ function createConversationItem(conv) {
     const time = formatTime(conv.last_message_time);
     const unreadBadge = conv.unread_count > 0 ? 
         `<span class="unread-badge">${conv.unread_count}</span>` : '';
-    
-    // Get first letter for avatar
-    const initial = conv.contact_name ? conv.contact_name.charAt(0).toUpperCase() : 'U';
-    
-    console.log('🖼️ DEBUG Conversation:', conv.contact_name, 'Avatar:', conv.contact_avatar);
-    
-    // Check if avatar exists and is not default
-    const hasAvatar = conv.contact_avatar && 
-                     !conv.contact_avatar.includes('default-avatar') && 
-                     conv.contact_avatar !== '/static/images/default-avatar.png';
-    
-    console.log('✅ Has avatar:', hasAvatar);
-    
-    let avatarHTML;
-    if (hasAvatar) {
-        // Handle both Supabase URLs and local paths
-        let avatarSrc;
-        if (conv.contact_avatar.startsWith('http://') || conv.contact_avatar.startsWith('https://')) {
-            avatarSrc = conv.contact_avatar; // Supabase URL
-        } else if (conv.contact_avatar.startsWith('/static/')) {
-            avatarSrc = conv.contact_avatar; // Already has /static/ prefix
-        } else if (conv.contact_avatar.startsWith('static/')) {
-            avatarSrc = `/${conv.contact_avatar}`; // Add leading slash
-        } else {
-            avatarSrc = `/static/${conv.contact_avatar}`; // Relative path
-        }
-        console.log('📸 Avatar src:', avatarSrc);
-        avatarHTML = `<img src="${avatarSrc}" alt="${conv.contact_name}">`;
-    } else {
-        console.log('🔤 Using initial:', initial);
-        avatarHTML = `<div class="avatar-initial">${initial}</div>`;
-    }
-    
+
+    const avatarHTML = buildAvatarHTML(conv.contact_avatar, conv.contact_name);
+
     // Contact type badge
     const typeBadge = conv.contact_type === 'rider' ? 
         `<span class="contact-type-badge rider">Rider</span>` : '';
@@ -408,28 +422,16 @@ function updateChatHeader(conv) {
         chatContactType.className = 'chat-contact-type buyer';
     }
     
-    // Update avatar with proper URL handling
-    if (chatAvatar) {
-        const hasAvatar = conv.contact_avatar && 
-                         !conv.contact_avatar.includes('default-avatar') && 
-                         conv.contact_avatar !== '/static/images/default-avatar.png';
-        
-        if (hasAvatar) {
-            // Handle both Supabase URLs and local paths
-            if (conv.contact_avatar.startsWith('http://') || conv.contact_avatar.startsWith('https://')) {
-                chatAvatar.src = conv.contact_avatar; // Supabase URL
-            } else if (conv.contact_avatar.startsWith('/static/')) {
-                chatAvatar.src = conv.contact_avatar; // Already has /static/ prefix
-            } else if (conv.contact_avatar.startsWith('static/')) {
-                chatAvatar.src = `/${conv.contact_avatar}`; // Add leading slash
-            } else {
-                chatAvatar.src = `/static/${conv.contact_avatar}`; // Relative path
-            }
-            chatAvatar.style.display = 'block';
-        } else {
-            // Use default avatar or initial
-            chatAvatar.src = '/static/images/user.png';
-        }
+    // Update avatar with proper URL handling. We replace the inner HTML of the
+    // chat-avatar container so we can render an initial circle when the buyer
+    // has no profile picture (instead of falling back to the broken alt text).
+    const chatAvatarContainer = document.querySelector('.chat-avatar');
+    if (chatAvatarContainer) {
+        chatAvatarContainer.innerHTML = buildAvatarHTML(
+            conv.contact_avatar,
+            conv.contact_name,
+            'chat-avatar-initial'
+        );
     }
 }
 
@@ -543,36 +545,16 @@ function createMessageBubble(msg) {
     const messageClass = isSent ? 'sent' : 'received';
     const time = formatMessageTime(msg.created_at); // Use 12-hour format with AM/PM
     
-    // Avatar for received messages with proper URL handling
+    // Avatar for received messages. Render an initial circle when the contact
+    // has no avatar so the bubble doesn't show a broken image with the full name.
     let avatarHTML = '';
     if (!isSent && currentConversation) {
-        let avatarSrc = '/static/images/user.png'; // default
-        
-        console.log('🖼️ DEBUG: Rendering avatar for received message');
-        console.log('📋 Contact avatar:', currentConversation.contact_avatar);
-        
-        if (currentConversation.contact_avatar && 
-            !currentConversation.contact_avatar.includes('default-avatar') &&
-            currentConversation.contact_avatar !== '/static/images/default-avatar.png') {
-            // Handle both Supabase URLs and local paths
-            if (currentConversation.contact_avatar.startsWith('http://') || currentConversation.contact_avatar.startsWith('https://')) {
-                avatarSrc = currentConversation.contact_avatar; // Supabase URL
-            } else if (currentConversation.contact_avatar.startsWith('/static/')) {
-                avatarSrc = currentConversation.contact_avatar; // Already has /static/ prefix
-            } else if (currentConversation.contact_avatar.startsWith('static/')) {
-                avatarSrc = `/${currentConversation.contact_avatar}`; // Add leading slash
-            } else {
-                avatarSrc = `/static/${currentConversation.contact_avatar}`; // Relative path
-            }
-        }
-        
-        console.log('✅ Final avatar src:', avatarSrc);
-        
-        avatarHTML = `
-            <div class="message-avatar">
-                <img src="${avatarSrc}" alt="${currentConversation.contact_name || 'User'}">
-            </div>
-        `;
+        const innerAvatar = buildAvatarHTML(
+            currentConversation.contact_avatar,
+            currentConversation.contact_name,
+            'message-avatar-initial'
+        );
+        avatarHTML = `<div class="message-avatar">${innerAvatar}</div>`;
     }
     
     return `
@@ -674,6 +656,9 @@ function startMessagePolling() {
     }
     
     messagePollingInterval = setInterval(async () => {
+        // Skip while tab is hidden so navigation in other tabs isn't slowed.
+        if (document.hidden) return;
+
         // Reload conversations
         await loadConversations();
         

@@ -200,42 +200,54 @@ def list_products():
                     
                     print(f"🖼️ Found {len(all_variant_images_response.data) if all_variant_images_response.data else 0} variant images")
                 
-                # Batch fetch order items to check for delivered orders
-                print(f"📦 Batch checking delivered orders...")
+                # Batch check which products have ANY order_items references.
+                # The FK constraint on order_items.product_id blocks deletion regardless
+                # of the order's status, so any reference must disable the delete button.
+                print(f"📦 Batch checking products with existing orders...")
                 order_items_response = supabase.table('order_items').select(
                     'product_id, order_id'
                 ).in_('product_id', product_ids).execute()
-                
-                # Group order_ids by product_id
-                product_order_ids = {}
+
+                products_with_orders = set()
+                product_to_order_ids = {}
                 if order_items_response.data:
                     for item in order_items_response.data:
-                        pid = item['product_id']
-                        if pid not in product_order_ids:
-                            product_order_ids[pid] = []
-                        if item['order_id'] not in product_order_ids[pid]:
-                            product_order_ids[pid].append(item['order_id'])
-                
-                # Batch check which orders are delivered
-                delivered_products = set()
-                if product_order_ids:
-                    all_order_ids = []
-                    for oids in product_order_ids.values():
-                        all_order_ids.extend(oids)
-                    
-                    if all_order_ids:
-                        delivered_orders_response = supabase.table('orders').select(
-                            'order_id'
-                        ).in_('order_id', all_order_ids).eq('order_status', 'delivered').eq('seller_id', seller_id).execute()
-                        
-                        delivered_order_ids = set(o['order_id'] for o in delivered_orders_response.data) if delivered_orders_response.data else set()
-                        
-                        # Mark products that have delivered orders
-                        for pid, oids in product_order_ids.items():
-                            if any(oid in delivered_order_ids for oid in oids):
-                                delivered_products.add(pid)
-                
-                print(f"📦 Found {len(delivered_products)} products with delivered orders")
+                        pid_o = item['product_id']
+                        oid_o = item.get('order_id')
+                        products_with_orders.add(pid_o)
+                        if oid_o is not None:
+                            product_to_order_ids.setdefault(pid_o, set()).add(oid_o)
+
+                # Determine which products have ONGOING orders (still in fulfillment).
+                # Ongoing = order_status in ('pending', 'in_transit'). The order_status
+                # enum only has these four values: pending, in_transit, delivered,
+                # cancelled. Sellers may also mark a delivery as 'preparing', but
+                # that lives on the deliveries.delivery_status column, not on
+                # orders.order_status — those orders are still 'pending' here.
+                # Archiving an ongoing order would orphan in-flight orders, so the
+                # seller must wait.
+                products_with_ongoing_orders = set()
+                all_referenced_order_ids = set()
+                for oids in product_to_order_ids.values():
+                    all_referenced_order_ids.update(oids)
+
+                if all_referenced_order_ids:
+                    ongoing_orders_response = supabase.table('orders').select(
+                        'order_id'
+                    ).in_('order_id', list(all_referenced_order_ids)).in_(
+                        'order_status', ['pending', 'in_transit']
+                    ).execute()
+                    ongoing_order_ids = {
+                        o['order_id'] for o in (ongoing_orders_response.data or [])
+                    }
+                    for pid_o, oids in product_to_order_ids.items():
+                        if oids & ongoing_order_ids:
+                            products_with_ongoing_orders.add(pid_o)
+
+                print(
+                    f"📦 Found {len(products_with_orders)} products with any orders, "
+                    f"{len(products_with_ongoing_orders)} with ongoing orders"
+                )
                 
                 # Process each product with batch-fetched data
                 for product in products_response.data:
@@ -274,8 +286,12 @@ def list_products():
                     total_stock = sum(variant['stock_quantity'] for variant in variants) if variants else 0
                     product['stock_quantity'] = total_stock
                     
-                    # Check if product has delivered orders from batch data
-                    product['has_delivered_orders'] = pid in delivered_products
+                    # Flag products that already have orders so the delete button
+                    # can be disabled in the UI (FK constraint would otherwise fail).
+                    product['has_orders'] = pid in products_with_orders
+                    # Flag products with ongoing (un-fulfilled) orders so the UI
+                    # can warn the seller before they try to archive.
+                    product['has_ongoing_orders'] = pid in products_with_ongoing_orders
                     
                     products.append(product)
             
@@ -683,7 +699,69 @@ def archive_product(product_id):
             
             # Toggle is_active status (archive/unarchive)
             new_status = False if product['is_active'] else True
-            
+
+            # If we're archiving (going active -> inactive), block when there are
+            # ongoing orders so the seller knows why and can fulfill them first.
+            # Unarchiving is always allowed since it only re-publishes the product.
+            if not new_status:
+                ongoing_items_response = supabase.table('order_items').select(
+                    'order_id'
+                ).eq('product_id', product_id).execute()
+
+                referenced_order_ids = list({
+                    item['order_id']
+                    for item in (ongoing_items_response.data or [])
+                    if item.get('order_id') is not None
+                })
+
+                if referenced_order_ids:
+                    ongoing_orders_response = supabase.table('orders').select(
+                        'order_id, order_number, order_status'
+                    ).in_('order_id', referenced_order_ids).in_(
+                        'order_status', ['pending', 'in_transit']
+                    ).execute()
+
+                    ongoing_orders = ongoing_orders_response.data or []
+                    if ongoing_orders:
+                        # Build a friendly per-status breakdown for the seller.
+                        status_label = {
+                            'pending': 'awaiting fulfillment',
+                            'in_transit': 'in transit',
+                        }
+                        counts = {}
+                        for o in ongoing_orders:
+                            counts[o['order_status']] = counts.get(o['order_status'], 0) + 1
+
+                        breakdown = ', '.join(
+                            f"{count} {status_label.get(status, status)}"
+                            for status, count in counts.items()
+                        )
+                        sample_orders = [
+                            o['order_number'] for o in ongoing_orders[:3]
+                            if o.get('order_number')
+                        ]
+
+                        message = (
+                            f"This product has {len(ongoing_orders)} ongoing order"
+                            f"{'s' if len(ongoing_orders) != 1 else ''} ({breakdown}). "
+                            f"Please complete or cancel "
+                            f"{'them' if len(ongoing_orders) != 1 else 'it'} before archiving."
+                        )
+
+                        print(
+                            f"⚠️ Blocked archive of product {product_id}: "
+                            f"{len(ongoing_orders)} ongoing order(s) -> {counts}"
+                        )
+
+                        return jsonify({
+                            'success': False,
+                            'message': message,
+                            'reason': 'ongoing_orders',
+                            'ongoing_count': len(ongoing_orders),
+                            'ongoing_breakdown': counts,
+                            'sample_order_numbers': sample_orders,
+                        }), 409
+
             update_response = supabase.table('products').update({
                 'is_active': new_status
             }).eq('product_id', product_id).execute()
@@ -733,7 +811,21 @@ def delete_product(product_id):
             
             if product['seller_id'] != seller_id:
                 return jsonify({'success': False, 'message': 'Unauthorized to delete this product'}), 403
-            
+
+            # Block deletion if the product is referenced by any order_items.
+            # The FK constraint order_items_product_id_fkey would otherwise raise
+            # a 23503 error. Sellers should archive instead so order history stays intact.
+            order_items_check = supabase.table('order_items').select(
+                'order_item_id', count='exact'
+            ).eq('product_id', product_id).limit(1).execute()
+
+            if order_items_check.data and len(order_items_check.data) > 0:
+                print(f"⚠️ Product {product_id} has existing orders, blocking delete")
+                return jsonify({
+                    'success': False,
+                    'message': 'This product has existing orders and cannot be deleted. Please archive it instead.'
+                }), 409
+
             # Delete in correct order due to foreign key constraints
             # 1. Delete product images
             supabase.table('product_images').delete().eq('product_id', product_id).execute()
