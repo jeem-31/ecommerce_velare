@@ -52,8 +52,8 @@ Thumbs.db
 # Backup folders
 backup_*/
 
-# Docker
-.dockerignore
+# Docker (do NOT ignore .dockerignore — it must be checked in so the build
+# context excludes the same files locally and in CI/Railway)
 
 # Temporary files
 *.tmp

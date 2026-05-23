@@ -155,13 +155,14 @@ def check_user_suspension():
     import time
 
     # Skip check for static files, login/register, root, the login POST endpoint,
-    # and the logout endpoint (otherwise a suspended user trying to log out hits
-    # the same redirect loop). Also skip the favicon.
+    # the logout endpoint, the health endpoint (called by Docker/Railway probes),
+    # and the favicon.
     path = request.path
     if (path.startswith('/static') or
             path == '/login' or
             path == '/register' or
             path == '/' or
+            path == '/health' or
             path == '/favicon.ico' or
             request.endpoint in ('auth.login_post', 'auth.logout')):
         return None
@@ -262,6 +263,16 @@ def add_cache_control_headers(response):
         response.headers['Expires'] = '0'
     
     return response
+
+
+# Lightweight health check used by Docker, docker-compose, and Railway. Must
+# be cheap and not touch external services so a transient Supabase outage
+# doesn't make the container restart in a loop.
+@app.route('/health')
+def health_check():
+    from flask import jsonify
+    return jsonify({'status': 'ok'}), 200
+
 
 if __name__ == '__main__':
     import os
