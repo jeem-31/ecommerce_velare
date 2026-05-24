@@ -105,7 +105,7 @@
 							<span class="stat-card-title">Revenue</span>
 							<i class="bi bi-currency-peso stat-card-icon"></i>
 						</div>
-						<div class="stat-card-value">�,�{{ "%.0fK"|format(stats.total_revenue/1000) if stats.total_revenue > 1000 else "%.0f"|format(stats.total_revenue) }}</div>
+						<div class="stat-card-value">₱{{ "%.0fK"|format(stats.total_revenue/1000) if stats.total_revenue > 1000 else "%.0f"|format(stats.total_revenue) }}</div>
 						<div class="stat-card-change positive">
 							<i class="bi bi-arrow-up"></i> {{ "%.1f"|format(stats.revenue_growth) }}% from last month
 						</div>

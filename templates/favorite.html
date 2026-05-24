@@ -125,7 +125,7 @@
 						<button class="favorite-action-btn favorite" data-favorite-id="{{ item.favorite_id }}" data-label="Remove from Favorites"><i class="bi bi-star-fill favorite-icon"></i></button>
 					</div>
 				</div>
-				<div class="favorite-item-price">�,�{{ "%.2f"|format(item.price) }}</div>
+				<div class="favorite-item-price">₱{{ "%.2f"|format(item.price) }}</div>
 				<button class="add-to-cart-btn" data-product-id="{{ item.product_id }}">Add to Cart</button>
 			</div>
 			{% endfor %}

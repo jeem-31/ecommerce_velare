@@ -93,7 +93,7 @@
 						</div>
 						<div class="payment-stat-info">
 							<div class="payment-stat-label">Total Sales</div>
-							<div class="payment-stat-value">�,�{{ "{:,.2f}".format(stats.total_sales) }}</div>
+							<div class="payment-stat-value">₱{{ "{:,.2f}".format(stats.total_sales) }}</div>
 							<div class="payment-stat-change positive">
 								<i class="bi bi-arrow-up"></i> 18.2% from last month
 							</div>
@@ -117,7 +117,7 @@
 						</div>
 						<div class="payment-stat-info">
 							<div class="payment-stat-label">Platform Commission</div>
-							<div class="payment-stat-value">�,�{{ "{:,.2f}".format(stats.total_commission) }}</div>
+							<div class="payment-stat-value">₱{{ "{:,.2f}".format(stats.total_commission) }}</div>
 							<div class="payment-stat-change neutral">
 								<i class="bi bi-dash"></i> 5% of total sales
 							</div>
@@ -234,8 +234,8 @@
 								<td>#{{ sale.order_number }}</td>
 								<td>{{ sale.date }}</td>
 								<td>{{ sale.seller }}</td>
-								<td>�,�{{ "{:,.2f}".format(sale.amount) }}</td>
-								<td class="commission-value">+�,�{{ "{:,.2f}".format(sale.commission) }}</td>
+								<td>₱{{ "{:,.2f}".format(sale.amount) }}</td>
+								<td class="commission-value">+₱{{ "{:,.2f}".format(sale.commission) }}</td>
 								<td>
 									<button class="action-btn view-btn" title="View Details" 
 										data-order-id="{{ sale.order_id }}"
@@ -307,15 +307,15 @@
 					<hr class="breakdown-divider">
 					<div class="breakdown-row highlight">
 						<span class="breakdown-label">Order Amount</span>
-						<span class="breakdown-value" id="orderAmount">�,�0.00</span>
+						<span class="breakdown-value" id="orderAmount">₱0.00</span>
 					</div>
 					<div class="breakdown-row highlight">
 						<span class="breakdown-label">Platform Commission (5%)</span>
-						<span class="breakdown-value" id="orderCommission">�,�0.00</span>
+						<span class="breakdown-value" id="orderCommission">₱0.00</span>
 					</div>
 					<div class="breakdown-row total">
 						<span class="breakdown-label">Net to Seller</span>
-						<span class="breakdown-value" id="orderNetAmount">�,�0.00</span>
+						<span class="breakdown-value" id="orderNetAmount">₱0.00</span>
 					</div>
 				</div>
 			</div>
