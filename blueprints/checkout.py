@@ -68,6 +68,74 @@ def checkout():
             ''').in_('cart_id', cart_ids).execute()
             
             checkout_items = checkout_response.data if checkout_response.data else []
+
+            # Fallback for Railway: PostgREST nested embeds (`products(...)`,
+            # `products(... sellers(...))`, `product_variants(...)`) sometimes
+            # come back empty even though the rows exist. When that happens
+            # the cart looks empty during checkout. Backfill via direct id
+            # lookups so the user actually sees their items.
+            if checkout_items:
+                product_ids_for_lookup = list({i['product_id'] for i in checkout_items if i.get('product_id')})
+                variant_ids_for_lookup = list({i['variant_id'] for i in checkout_items if i.get('variant_id')})
+
+                products_by_id = {}
+                if product_ids_for_lookup:
+                    try:
+                        p_resp = supabase.table('products').select(
+                            'product_id, product_name, materials, price, seller_id'
+                        ).in_('product_id', product_ids_for_lookup).execute()
+                        if p_resp.data:
+                            products_by_id = {p['product_id']: p for p in p_resp.data}
+                    except Exception as fb_err:
+                        print(f"⚠️ Checkout product fallback fetch failed: {fb_err}")
+
+                seller_ids_for_lookup = list({
+                    p.get('seller_id') for p in products_by_id.values() if p.get('seller_id')
+                })
+                # Also collect seller_ids from any nested products that did
+                # come through, in case only some rows were affected.
+                for item in checkout_items:
+                    nested_product = item.get('products') or {}
+                    if isinstance(nested_product, dict) and nested_product.get('seller_id'):
+                        seller_ids_for_lookup.append(nested_product['seller_id'])
+                seller_ids_for_lookup = list(set(seller_ids_for_lookup))
+
+                sellers_by_id = {}
+                if seller_ids_for_lookup:
+                    try:
+                        s_resp = supabase.table('sellers').select(
+                            'seller_id, shop_name, shop_logo'
+                        ).in_('seller_id', seller_ids_for_lookup).execute()
+                        if s_resp.data:
+                            sellers_by_id = {s['seller_id']: s for s in s_resp.data}
+                    except Exception as fb_err:
+                        print(f"⚠️ Checkout seller fallback fetch failed: {fb_err}")
+
+                variants_by_id = {}
+                if variant_ids_for_lookup:
+                    try:
+                        v_resp = supabase.table('product_variants').select(
+                            'variant_id, stock_quantity, size, color'
+                        ).in_('variant_id', variant_ids_for_lookup).execute()
+                        if v_resp.data:
+                            variants_by_id = {v['variant_id']: v for v in v_resp.data}
+                    except Exception as fb_err:
+                        print(f"⚠️ Checkout variant fallback fetch failed: {fb_err}")
+
+                for item in checkout_items:
+                    # Backfill product if nested join failed.
+                    if not item.get('products') and item.get('product_id'):
+                        item['products'] = dict(products_by_id.get(item['product_id'], {}))
+                    # Backfill nested seller inside the product dict if missing.
+                    nested_product = item.get('products') or {}
+                    if isinstance(nested_product, dict):
+                        nested_seller = nested_product.get('sellers')
+                        if not nested_seller and nested_product.get('seller_id'):
+                            nested_product['sellers'] = sellers_by_id.get(nested_product['seller_id'], {})
+                            item['products'] = nested_product
+                    # Backfill variant if nested join failed.
+                    if not item.get('product_variants') and item.get('variant_id'):
+                        item['product_variants'] = variants_by_id.get(item['variant_id'], {})
             
             # Debug: Print raw response
             print(f"[CHECKOUT DEBUG] Raw checkout_items count: {len(checkout_items)}")
@@ -204,6 +272,7 @@ def checkout():
             # Get all buyer vouchers without date filter (filter in Python instead)
             vouchers_response = supabase.table('buyer_vouchers').select('''
                 buyer_voucher_id,
+                voucher_id,
                 times_remaining,
                 is_used,
                 vouchers (
@@ -217,7 +286,27 @@ def checkout():
             ''').eq('buyer_id', buyer_id).eq('is_used', False).execute()
             
             print(f"🎫 Found {len(vouchers_response.data) if vouchers_response.data else 0} vouchers (before date filter)")
-            
+
+            # Fallback for Railway: backfill `vouchers` if the nested embed
+            # came back empty so available coupons aren't silently dropped.
+            if vouchers_response.data:
+                missing_voucher_ids = list({
+                    bv['voucher_id']
+                    for bv in vouchers_response.data
+                    if not bv.get('vouchers') and bv.get('voucher_id')
+                })
+                if missing_voucher_ids:
+                    try:
+                        v_resp = supabase.table('vouchers').select(
+                            'voucher_id, voucher_code, voucher_name, voucher_type, discount_percent, end_date'
+                        ).in_('voucher_id', missing_voucher_ids).execute()
+                        vouchers_by_id = {v['voucher_id']: v for v in (v_resp.data or [])}
+                        for bv in vouchers_response.data:
+                            if not bv.get('vouchers') and bv.get('voucher_id'):
+                                bv['vouchers'] = vouchers_by_id.get(bv['voucher_id'])
+                    except Exception as fb_err:
+                        print(f"⚠️ Checkout voucher fallback fetch failed: {fb_err}")
+
             vouchers = []
             if vouchers_response.data:
                 for bv in vouchers_response.data:

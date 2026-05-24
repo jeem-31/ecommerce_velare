@@ -44,7 +44,27 @@ def favorite():
         ''').eq('buyer_id', buyer_id).order('added_at', desc=True).execute()
         
         favorites = favorites_response.data if favorites_response.data else []
-        
+
+        # Fallback for Railway: PostgREST nested join `products(...)` sometimes
+        # returns an empty dict on production even when the row exists, which
+        # makes Favorites look empty. Backfill the embedded product data with
+        # a direct lookup keyed by product_id when needed.
+        if favorites:
+            product_ids_for_lookup = list({item['product_id'] for item in favorites if item.get('product_id')})
+            products_by_id = {}
+            if product_ids_for_lookup:
+                try:
+                    p_resp = supabase.table('products').select(
+                        'product_id, product_name, materials, price, seller_id, is_active'
+                    ).in_('product_id', product_ids_for_lookup).execute()
+                    if p_resp.data:
+                        products_by_id = {p['product_id']: p for p in p_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Favorites product fallback fetch failed: {fb_err}")
+            for item in favorites:
+                if not item.get('products') and item.get('product_id'):
+                    item['products'] = products_by_id.get(item['product_id'], {})
+
         # Filter out inactive products
         favorites = [item for item in favorites if item.get('products', {}).get('is_active', False)]
         

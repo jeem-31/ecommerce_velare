@@ -42,6 +42,7 @@ def browse_product():
                 rating,
                 total_reviews,
                 total_sold,
+                seller_id,
                 created_at,
                 sellers (
                     shop_name
@@ -64,6 +65,20 @@ def browse_product():
             if hero_response.data:
                 hero = hero_response.data[0]
                 seller = hero.get('sellers', {})
+
+                # Fallback for Railway: nested `sellers(shop_name)` join
+                # sometimes returns null even when a real seller exists.
+                # Pull the shop name directly when that happens so the hero
+                # banner doesn't render with a blank shop name.
+                if (not seller or not (isinstance(seller, dict) and seller.get('shop_name'))) and hero.get('seller_id'):
+                    try:
+                        s_resp = supabase.table('sellers').select(
+                            'shop_name'
+                        ).eq('seller_id', hero['seller_id']).execute()
+                        if s_resp.data:
+                            seller = s_resp.data[0]
+                    except Exception as fb_err:
+                        print(f"⚠️ Hero seller fallback fetch failed: {fb_err}")
                 
                 # Get primary image
                 image_response = supabase.table('product_images').select('image_url').eq('product_id', hero['product_id']).eq('is_primary', True).order('display_order').limit(1).execute()
@@ -103,6 +118,7 @@ def browse_product():
                 rating,
                 total_reviews,
                 total_sold,
+                seller_id,
                 created_at,
                 sellers (
                     shop_name
@@ -155,10 +171,31 @@ def browse_product():
                 images_dict = {}
                 if images_response.data:
                     images_dict = {img['product_id']: img['image_url'] for img in images_response.data}
-                
+
+                # Fallback for Railway: backfill missing nested `sellers`
+                # data so all listed products show their shop name.
+                missing_seller_ids = list({
+                    p['seller_id']
+                    for p in products_response.data
+                    if (not p.get('sellers') or not (isinstance(p.get('sellers'), dict) and p['sellers'].get('shop_name')))
+                    and p.get('seller_id')
+                })
+                sellers_by_id = {}
+                if missing_seller_ids:
+                    try:
+                        s_resp = supabase.table('sellers').select(
+                            'seller_id, shop_name'
+                        ).in_('seller_id', missing_seller_ids).execute()
+                        if s_resp.data:
+                            sellers_by_id = {s['seller_id']: s for s in s_resp.data}
+                    except Exception as fb_err:
+                        print(f"⚠️ Products seller fallback fetch failed: {fb_err}")
+
                 # Build products list
                 for product in products_response.data:
                     seller = product.get('sellers', {})
+                    if (not seller or not (isinstance(seller, dict) and seller.get('shop_name'))) and product.get('seller_id'):
+                        seller = sellers_by_id.get(product['seller_id'], seller)
                     
                     # Get and fix image path
                     image_url = images_dict.get(product['product_id'])

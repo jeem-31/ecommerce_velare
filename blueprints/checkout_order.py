@@ -83,7 +83,42 @@ def place_order():
             
             if not cart_response.data:
                 return jsonify({'success': False, 'message': 'No items found'}), 404
-            
+
+            # Fallback for Railway: nested `products(...)` and `product_variants(...)`
+            # joins occasionally come back empty on production. When that happens
+            # checkout fails because seller_id and stock can't be read. Backfill
+            # via direct id lookups so order placement still succeeds.
+            product_ids_for_lookup = list({i['product_id'] for i in cart_response.data if i.get('product_id')})
+            variant_ids_for_lookup = list({i['variant_id'] for i in cart_response.data if i.get('variant_id')})
+
+            products_by_id = {}
+            if product_ids_for_lookup:
+                try:
+                    p_resp = supabase.table('products').select(
+                        'product_id, product_name, materials, price, seller_id'
+                    ).in_('product_id', product_ids_for_lookup).execute()
+                    if p_resp.data:
+                        products_by_id = {p['product_id']: p for p in p_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Order placement product fallback fetch failed: {fb_err}")
+
+            variants_by_id = {}
+            if variant_ids_for_lookup:
+                try:
+                    v_resp = supabase.table('product_variants').select(
+                        'variant_id, color, size, stock_quantity'
+                    ).in_('variant_id', variant_ids_for_lookup).execute()
+                    if v_resp.data:
+                        variants_by_id = {v['variant_id']: v for v in v_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Order placement variant fallback fetch failed: {fb_err}")
+
+            for item in cart_response.data:
+                if not item.get('products') and item.get('product_id'):
+                    item['products'] = products_by_id.get(item['product_id'], {})
+                if not item.get('product_variants') and item.get('variant_id'):
+                    item['product_variants'] = variants_by_id.get(item['variant_id'], {})
+
             # Flatten cart items
             cart_items = []
             for item in cart_response.data:
