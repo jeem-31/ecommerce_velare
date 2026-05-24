@@ -425,7 +425,14 @@ def get_product_variant(variant_id):
 # ============================================================================
 
 def get_buyer_profile(user_id):
-    """Get buyer profile with user details"""
+    """Get buyer profile with user details.
+
+    Tries the PostgREST nested join first (`users(email)`). If that join
+    returns nothing — e.g. the FK isn't visible to the anon role on this
+    Supabase project — we fall back to a separate `users` query so the
+    profile page never ends up showing 'None' for the email. This keeps
+    behavior consistent between local dev and the Railway deployment.
+    """
     try:
         supabase = get_supabase_client()
         # Get buyer data (first_name, last_name, phone_number are in buyers table)
@@ -435,15 +442,31 @@ def get_buyer_profile(user_id):
                 email
             )
         ''').eq('user_id', user_id).execute()
-        
-        if response.data:
-            buyer = response.data[0]
-            # Flatten user data (only email is from users table)
-            if 'users' in buyer and buyer['users']:
-                user_data = buyer['users']
-                buyer['email'] = user_data.get('email')
-            return buyer
-        return None
+
+        if not response.data:
+            return None
+
+        buyer = response.data[0]
+
+        # Flatten user data (only email is from users table)
+        nested_users = buyer.get('users')
+        if isinstance(nested_users, dict) and nested_users.get('email'):
+            buyer['email'] = nested_users['email']
+        elif isinstance(nested_users, list) and nested_users and nested_users[0].get('email'):
+            buyer['email'] = nested_users[0]['email']
+        else:
+            # Fallback: nested join didn't resolve (missing FK metadata in
+            # PostgREST schema cache, RLS, or the join just returned null).
+            # Fetch the email directly from the users table.
+            buyer['email'] = None
+            try:
+                user_response = supabase.table('users').select('email').eq('user_id', user_id).execute()
+                if user_response.data:
+                    buyer['email'] = user_response.data[0].get('email')
+            except Exception as fallback_err:
+                print(f"⚠️ Email fallback fetch failed for user_id={user_id}: {fallback_err}")
+
+        return buyer
     except Exception as e:
         print(f"❌ Error getting buyer profile: {e}")
         return None
