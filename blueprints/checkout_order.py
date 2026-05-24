@@ -7,6 +7,12 @@ from datetime import datetime
 # Add the parent directory to the path to import db_config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.supabase_helper import *
+from blueprints.shipping_fee import (
+    calculate_fee,
+    get_address_by_id,
+    get_seller_default_address,
+    DEFAULT_SHIPPING_FEE,
+)
 
 checkout_order_bp = Blueprint('checkout_order', __name__)
 
@@ -83,7 +89,42 @@ def place_order():
             
             if not cart_response.data:
                 return jsonify({'success': False, 'message': 'No items found'}), 404
-            
+
+            # Fallback for Railway: nested `products(...)` and `product_variants(...)`
+            # joins occasionally come back empty on production. When that happens
+            # checkout fails because seller_id and stock can't be read. Backfill
+            # via direct id lookups so order placement still succeeds.
+            product_ids_for_lookup = list({i['product_id'] for i in cart_response.data if i.get('product_id')})
+            variant_ids_for_lookup = list({i['variant_id'] for i in cart_response.data if i.get('variant_id')})
+
+            products_by_id = {}
+            if product_ids_for_lookup:
+                try:
+                    p_resp = supabase.table('products').select(
+                        'product_id, product_name, materials, price, seller_id'
+                    ).in_('product_id', product_ids_for_lookup).execute()
+                    if p_resp.data:
+                        products_by_id = {p['product_id']: p for p in p_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Order placement product fallback fetch failed: {fb_err}")
+
+            variants_by_id = {}
+            if variant_ids_for_lookup:
+                try:
+                    v_resp = supabase.table('product_variants').select(
+                        'variant_id, color, size, stock_quantity'
+                    ).in_('variant_id', variant_ids_for_lookup).execute()
+                    if v_resp.data:
+                        variants_by_id = {v['variant_id']: v for v in v_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Order placement variant fallback fetch failed: {fb_err}")
+
+            for item in cart_response.data:
+                if not item.get('products') and item.get('product_id'):
+                    item['products'] = products_by_id.get(item['product_id'], {})
+                if not item.get('product_variants') and item.get('variant_id'):
+                    item['product_variants'] = variants_by_id.get(item['variant_id'], {})
+
             # Flatten cart items
             cart_items = []
             for item in cart_response.data:
@@ -138,13 +179,36 @@ def place_order():
             else:
                 next_num = 1
             
+            # Resolve buyer's address once for tier-based shipping fee
+            buyer_address_record = get_address_by_id(supabase, address_id) or {}
+
+            # Compute per-seller tier shipping fees authoritatively on the server.
+            # We do not trust the client-supplied shipping_fee.
+            seller_fee_map = {}
+            for seller_id in seller_items.keys():
+                seller_addr = get_seller_default_address(supabase, seller_id) or {}
+                fee_value, tier = calculate_fee(buyer_address_record, seller_addr)
+                seller_fee_map[seller_id] = {
+                    'fee': Decimal(str(fee_value)),
+                    'tier': tier,
+                }
+
+            total_actual_shipping = sum(
+                entry['fee'] for entry in seller_fee_map.values()
+            ) or Decimal('0')
+
+            # Distribute discount evenly across sellers (existing behaviour)
+            num_sellers = len(seller_items)
+
             # Create orders for each seller
             order_ids = []
-            num_sellers = len(seller_items)
-            
+
             for seller_id, items in seller_items.items():
                 seller_subtotal = sum(Decimal(str(item['price'])) * item['quantity'] for item in items)
-                seller_shipping = shipping_fee / num_sellers
+                seller_actual_shipping = seller_fee_map[seller_id]['fee']
+                # If buyer has free_shipping voucher, the buyer pays nothing for
+                # shipping; the platform absorbs the actual delivery fee.
+                seller_shipping = Decimal('0') if is_free_shipping else seller_actual_shipping
                 seller_discount = discount_amount / num_sellers
                 commission_amount = seller_subtotal * Decimal('0.05')
                 seller_total = seller_subtotal + seller_shipping - seller_discount
@@ -188,8 +252,10 @@ def place_order():
                 address_response = supabase.table('addresses').select('full_address').eq('address_id', address_id).execute()
                 delivery_address = address_response.data[0]['full_address'] if address_response.data else 'N/A'
                 
-                # Calculate delivery fee
-                actual_delivery_fee = Decimal('49.00') / num_sellers if is_free_shipping else shipping_fee / num_sellers
+                # Calculate delivery fee — use the per-seller tier-based fee.
+                # The rider always gets paid the actual delivery fee. When the
+                # buyer used a free_shipping voucher, the platform absorbs it.
+                actual_delivery_fee = seller_actual_shipping
                 
                 # Create delivery record with NULL status (seller needs to click "Prepare Package" first)
                 delivery_data = {

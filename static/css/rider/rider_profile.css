@@ -58,7 +58,7 @@ body {
 }
 
 .logo h2 {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -573,6 +573,24 @@ body {
     object-fit: cover;
 }
 
+.profile-initial-large {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(211,189,155,0.35) 0%, rgba(105,91,68,0.35) 100%);
+    color: #8b7355;
+    font-size: 80px;
+    font-weight: 600;
+    font-family: 'Playfair Display', serif;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
 .upload-placeholder {
     position: absolute;
     top: 0;
@@ -627,6 +645,12 @@ body {
 
 .profile-picture-container.has-image .upload-overlay {
     display: flex;
+}
+
+/* Show hover overlay when initial-letter fallback is visible */
+.profile-picture-container:hover .profile-initial-large ~ .upload-overlay {
+    display: flex;
+    opacity: 1;
 }
 
 .upload-overlay i {
@@ -713,7 +737,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.95rem;
     font-weight: 600;
     animation: slideIn 0.3s ease;

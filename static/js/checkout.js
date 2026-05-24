@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calculate and display order total
     calculateOrderTotal();
+
+    // Recompute the shipping fee based on the buyer/seller addresses tier
+    fetchShippingFee();
 });
 
 function initializeCheckout() {
@@ -573,6 +576,11 @@ function updateAddressDisplay(selectedAddressInfo, selectedAddressId) {
             // Add previous default to list
             otherAddressesList.insertBefore(previousDefaultDiv, otherAddressesList.firstChild);
         }
+    }
+
+    // Refresh tier-based shipping fee for the new default address
+    if (typeof fetchShippingFee === 'function') {
+        fetchShippingFee();
     }
 }
 
@@ -1292,6 +1300,77 @@ let currentDiscount = 0;
 let currentDiscountPercent = 0;
 let appliedVoucherType = null;
 let appliedVoucherId = null;
+
+// Fetch the tier-based shipping fee from the server based on the currently
+// selected default address and the cart_ids in the URL. Falls back to the
+// previous fee on error so checkout never breaks.
+function fetchShippingFee() {
+    const defaultAddress = document.querySelector('.default-address-section .address-info');
+    const addressId = defaultAddress ? defaultAddress.dataset.addressId : null;
+    if (!addressId) {
+        // No address selected yet — keep the existing fee
+        return Promise.resolve(currentShippingFee);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const cartIdsParam = urlParams.get('cart_ids') || '';
+    const cartIds = cartIdsParam
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+
+    return fetch('/api/calculate_shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            address_id: parseInt(addressId, 10),
+            cart_ids: cartIds,
+        }),
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success && typeof data.total_shipping_fee === 'number') {
+                currentShippingFee = data.total_shipping_fee;
+                updateShippingTierNote(data.per_seller || []);
+                calculateOrderTotal();
+                return currentShippingFee;
+            }
+            return currentShippingFee;
+        })
+        .catch(err => {
+            console.error('Failed to fetch shipping fee:', err);
+            return currentShippingFee;
+        });
+}
+
+const SHIPPING_TIER_LABELS = {
+    1: 'Same City',
+    2: 'Same Province',
+    3: 'Same Region',
+    4: 'Different Region',
+    5: 'Cross-Island',
+};
+
+function updateShippingTierNote(perSeller) {
+    const noteEl = document.getElementById('shippingTierNote');
+    const rowEl = document.getElementById('shippingTierRow');
+    if (!noteEl || !rowEl) return;
+
+    if (!perSeller || perSeller.length === 0) {
+        rowEl.style.display = 'none';
+        return;
+    }
+
+    if (perSeller.length === 1) {
+        const entry = perSeller[0];
+        const label = SHIPPING_TIER_LABELS[entry.tier] || 'Standard';
+        noteEl.textContent = `Tier ${entry.tier} — ${label}`;
+    } else {
+        const tiers = perSeller.map(p => `T${p.tier} ₱${Number(p.fee).toFixed(0)}`).join(' + ');
+        noteEl.textContent = `${perSeller.length} sellers: ${tiers}`;
+    }
+    rowEl.style.display = 'flex';
+}
 
 // Calculate and display order total
 function calculateOrderTotal() {

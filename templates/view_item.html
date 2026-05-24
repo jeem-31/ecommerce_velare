@@ -8,7 +8,7 @@
     <!-- Optimized Google Fonts - Combined into one request -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@700&family=Goodie&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/view_item.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
@@ -170,7 +170,7 @@
           <i class="bi bi-star{% if is_favorite %}-fill{% endif %} favorite-icon"></i>
         </button>
       </div>
-      <div class="product-price-placeholder">₱ {{ "{:,.2f}".format(product.price) }}</div>
+      <div class="product-price-placeholder">�,� {{ "{:,.2f}".format(product.price) }}</div>
       <div class="product-materials" style="white-space: pre-wrap;"><strong>Materials:</strong> {{ product.materials or 'Not specified' }}</div>
       <div class="product-color-size-row">
         {% if variants %}
@@ -306,10 +306,10 @@
             <div style="margin-bottom: 16px;">
               <strong style="display: block; margin-bottom: 12px;">Product Details:</strong>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; line-height: 1.8;">
-                <div>• Category: {{ product.category }}</div>
-                <div>• <a href="#feedbacks-tab" onclick="document.querySelector('.tab[data-tab=&quot;feedbacks&quot;]').click(); return false;" style="color: inherit; text-decoration: none; cursor: pointer;">Rating: <span style="color: #D3BD9B; font-weight: 600;">{{ "%.2f"|format(product.rating) }} ⭐ ({{ product.total_reviews }} reviews)</span></a></div>
-                <div>• Stock: {{ total_stock }} available</div>
-                <div>• Total Sold: {{ product.total_sold }}</div>
+                <div>�?� Category: {{ product.category }}</div>
+                <div>�?� <a href="#feedbacks-tab" onclick="document.querySelector('.tab[data-tab=&quot;feedbacks&quot;]').click(); return false;" style="color: inherit; text-decoration: none; cursor: pointer;">Rating: <span style="color: #D3BD9B; font-weight: 600;">{{ "%.2f"|format(product.rating) }} ⭐ ({{ product.total_reviews }} reviews)</span></a></div>
+                <div>�?� Stock: {{ total_stock }} available</div>
+                <div>�?� Total Sold: {{ product.total_sold }}</div>
               </div>
             </div>
             

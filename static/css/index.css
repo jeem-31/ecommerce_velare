@@ -273,7 +273,7 @@ html {
     letter-spacing: 3px;
     color: #181818;
     margin-bottom: 10px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
 }
 .icon-bar {
@@ -809,7 +809,7 @@ html {
     color: white;
     font-size: 0.65rem;
     font-weight: bold;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     min-width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -880,7 +880,7 @@ html {
 }
 
 .notification-title {
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.9rem;
     font-weight: 600;
     color: #181818;
@@ -888,7 +888,7 @@ html {
 }
 
 .notification-message {
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.85rem;
     color: #666;
     line-height: 1.4;
@@ -896,7 +896,7 @@ html {
 }
 
 .notification-time {
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.75rem;
     color: #999;
 }
@@ -905,7 +905,7 @@ html {
 .notification-empty {
     padding: 32px 16px;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.9rem;
     color: #999;
 }

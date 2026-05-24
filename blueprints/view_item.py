@@ -141,6 +141,7 @@ def view_item(product_id):
             rating,
             review_text,
             created_at,
+            buyer_id,
             buyers (
                 first_name,
                 last_name
@@ -150,7 +151,30 @@ def view_item(product_id):
         reviews = []
         if reviews_response.data:
             reviews_data = clean_supabase_data(reviews_response.data)
+
+            # Fallback for Railway: backfill `buyers` nested data when the
+            # nested join returns nothing — otherwise reviews show as
+            # 'Anonymous' even when we have a real buyer record.
+            missing_buyer_ids = list({
+                r['buyer_id']
+                for r in reviews_data
+                if not r.get('buyers') and r.get('buyer_id')
+            })
+            buyers_by_id = {}
+            if missing_buyer_ids:
+                try:
+                    b_resp = supabase.table('buyers').select(
+                        'buyer_id, first_name, last_name'
+                    ).in_('buyer_id', missing_buyer_ids).execute()
+                    if b_resp.data:
+                        buyers_by_id = {b['buyer_id']: b for b in b_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Reviews buyer fallback fetch failed: {fb_err}")
+
             for review in reviews_data:
+                if not review.get('buyers') and review.get('buyer_id'):
+                    review['buyers'] = buyers_by_id.get(review['buyer_id'], {})
+
                 buyer_data = review.get('buyers', {})
                 if buyer_data and isinstance(buyer_data, dict):
                     first_name = buyer_data.get('first_name', '')

@@ -355,7 +355,7 @@ body {
 }
 
 .document-label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -398,7 +398,7 @@ body {
 }
 
 .document-image-container .upload-placeholder span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 500;
 }
@@ -441,7 +441,7 @@ body {
 }
 
 .document-image-container .upload-overlay span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	letter-spacing: 0.5px;
@@ -459,7 +459,7 @@ body {
 	color: #ffffff;
 	border: none;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;

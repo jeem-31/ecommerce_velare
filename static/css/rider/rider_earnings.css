@@ -58,7 +58,7 @@ body {
 }
 
 .logo h2 {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -446,7 +446,7 @@ body {
 }
 
 .date-input {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.9rem;
     padding: 10px 15px;
     border: none;
@@ -464,7 +464,7 @@ body {
 }
 
 .date-separator {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     color: #666;
     font-weight: 500;
 }
@@ -553,7 +553,7 @@ body {
 
 /* Order ID Column */
 .order-id {
-    font-family: 'Courier New', monospace;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-weight: 600;
     color: #181818;
     font-size: 16px;

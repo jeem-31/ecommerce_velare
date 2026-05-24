@@ -1,4 +1,4 @@
-/* Admin Dashboard CSS - Consistent with Veláre design system */
+/* Admin Dashboard CSS - Consistent with VelÃ¡re design system */
 
 /* Ensure consistent body styling */
 html, body {
@@ -96,7 +96,7 @@ html, body {
 }
 
 .stat-card-value {
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 2rem;
 	color: #181818;
 	font-weight: 700;
@@ -104,7 +104,7 @@ html, body {
 }
 
 .stat-card-change {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 500;
 }
@@ -161,7 +161,7 @@ html, body {
 }
 
 .chart-filter {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	padding: 6px 12px;
 	border: 1px solid #e0d7c6;
@@ -184,7 +184,7 @@ html, body {
 }
 
 .date-input {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	padding: 6px 10px;
 	border: 1px solid #e0d7c6;
@@ -203,14 +203,14 @@ html, body {
 }
 
 .date-separator {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	color: #666;
 	padding: 0 4px;
 }
 
 .apply-date-btn {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	padding: 6px 16px;
 	border: 1px solid #bfa14a;

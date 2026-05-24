@@ -114,7 +114,7 @@ body {
 }
 
 .sales-card-number {
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.8rem;
 	font-weight: 700;
 	color: #2c2236;
@@ -283,7 +283,7 @@ body {
 
 .date-range-filter span {
 	color: #6d6552;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 500;
 }

@@ -45,7 +45,7 @@ body, html {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     background: #fafbfc;
 }
 
@@ -168,7 +168,7 @@ form button:hover {
 .welcome-message {
     text-align: center;
     margin-bottom: 15px;
-    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .welcome-title {
@@ -258,7 +258,7 @@ form button:hover {
     margin-bottom: 12px;
     margin-top: 0; /* No gap above */
     line-height: 1.4;
-    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-weight: normal;
     margin-top: 15px;
 }
@@ -334,12 +334,12 @@ form button:hover {
     font-size: 0.95em;
     color: #222;
     margin: 18px 0 12px 0;
-    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .register-disclaimer label {
     font-size: 0.85em;
-    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-weight: normal;
     color: #222;
 }
@@ -404,7 +404,7 @@ form button:hover {
 
 .register-desc {
     font-size: 0.85em;
-    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     color: #222;
     text-align: left;
     margin-bottom: 32px;
@@ -423,7 +423,7 @@ form button:hover {
     margin-left: -1px;
 }
 
-/* Tablet (768px–1023px): image 40%, form 60% */
+/* Tablet (768pxâ€“1023px): image 40%, form 60% */
 @media (max-width: 1023px) and (min-width: 768px) {
     .container {
         flex-direction: row;
@@ -437,7 +437,7 @@ form button:hover {
     }
 }
 
-/* Phone (≤767px): vertical stack, image on top */
+/* Phone (â‰¤767px): vertical stack, image on top */
 @media (max-width: 767px) {
     .container {
         flex-direction: column;

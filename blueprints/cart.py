@@ -52,7 +52,45 @@ def cart():
         ''').eq('buyer_id', buyer_id).order('added_at', desc=True).execute()
         
         cart_items = cart_response.data if cart_response.data else []
-        
+
+        # Fallback: PostgREST nested joins occasionally come back empty on
+        # Railway (FK metadata cache miss / RLS), which makes the cart look
+        # empty even though the rows exist. Fetch products and variants
+        # directly by id and merge them in if the embedded objects are empty.
+        if cart_items:
+            product_ids_for_lookup = list({item['product_id'] for item in cart_items if item.get('product_id')})
+            variant_ids_for_lookup = list({item['variant_id'] for item in cart_items if item.get('variant_id')})
+
+            products_by_id = {}
+            if product_ids_for_lookup:
+                try:
+                    p_resp = supabase.table('products').select(
+                        'product_id, product_name, materials, price, is_active, seller_id'
+                    ).in_('product_id', product_ids_for_lookup).execute()
+                    if p_resp.data:
+                        products_by_id = {p['product_id']: p for p in p_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Cart product fallback fetch failed: {fb_err}")
+
+            variants_by_id = {}
+            if variant_ids_for_lookup:
+                try:
+                    v_resp = supabase.table('product_variants').select(
+                        'variant_id, stock_quantity, size, color'
+                    ).in_('variant_id', variant_ids_for_lookup).execute()
+                    if v_resp.data:
+                        variants_by_id = {v['variant_id']: v for v in v_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Cart variant fallback fetch failed: {fb_err}")
+
+            for item in cart_items:
+                # Backfill embedded `products` if the join returned nothing.
+                if not item.get('products') and item.get('product_id'):
+                    item['products'] = products_by_id.get(item['product_id'], {})
+                # Backfill embedded `product_variants` likewise.
+                if not item.get('product_variants') and item.get('variant_id'):
+                    item['product_variants'] = variants_by_id.get(item['variant_id'], {})
+
         # Filter out inactive products
         cart_items = [item for item in cart_items if item.get('products', {}).get('is_active', False)]
         

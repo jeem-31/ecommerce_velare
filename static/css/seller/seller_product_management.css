@@ -426,7 +426,7 @@ body {
 	justify-content: center;
 	transition: all 0.2s ease;
 	font-size: 0.9rem;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .action-btn.add-variant-btn {
@@ -1959,7 +1959,7 @@ body {
 }
 
 .checkbox-item input[type="checkbox"]:checked::after {
-	content: '✓';
+	content: 'âœ“';
 	position: absolute;
 	top: -2px;
 	left: 1px;
@@ -2322,7 +2322,7 @@ body {
 	color: #666;
 	border: 1px solid #ddd;
 	border-radius: 6px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.875rem;
 	font-weight: 500;
 	cursor: not-allowed;
@@ -3425,7 +3425,7 @@ body {
 /* Except buttons - keep Montserrat */
 .edit-modal-body button,
 .edit-modal-footer button {
-	font-family: 'Goudy Old Style', 'Goudy', serif !important;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif !important;
 }
 
 .edit-modal-close,
@@ -3763,7 +3763,7 @@ body {
 	padding: 10px 0 !important;
 	background: transparent !important;
 	font-size: 15px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	transition: all 0.3s ease;
 	text-align: left !important;
 	flex: 1;
@@ -3830,7 +3830,7 @@ body {
 	font-size: 14px;
 	font-weight: 600;
 	color: #2c2236;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	text-align: left !important;
 	width: 120px !important;
 	min-width: 120px !important;
@@ -3845,7 +3845,7 @@ body {
 	font-size: 14px;
 	font-weight: 600;
 	color: #2c2236;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	text-align: left !important;
 	width: 120px !important;
 	min-width: 120px !important;
@@ -3860,7 +3860,7 @@ body {
 	font-size: 14px;
 	font-weight: 600;
 	color: #2c2236;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	text-align: left !important;
 	width: 120px !important;
 	min-width: 120px !important;
@@ -3915,7 +3915,7 @@ body {
 	font-size: 14px;
 	font-weight: 600;
 	color: #2c2236;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	text-align: left !important;
 	width: 120px !important;
 	min-width: 120px !important;
@@ -3933,7 +3933,7 @@ body {
 	border-bottom: 2px solid #bbb;
 	border-radius: 0;
 	background: transparent;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 14px;
 	font-weight: 500;
 	color: #2c2236;
@@ -4146,7 +4146,7 @@ body {
 	font-size: 14px;
 	text-align: left;
 	background: transparent;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	transition: all 0.3s ease;
 }
 
@@ -4192,7 +4192,7 @@ body {
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.3s ease;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
@@ -4292,7 +4292,7 @@ body {
 	cursor: pointer;
 	transition: all 0.3s ease;
 	border: none;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .cancel-btn {
@@ -4420,7 +4420,7 @@ body {
     color: #ffffff;
     border: none;
     border-radius: 4px;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -4901,7 +4901,7 @@ body {
     min-width: 320px;
     max-width: 90vw;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #preparing-modal .modal-title {
@@ -4923,7 +4923,7 @@ body {
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #preparing-modal #confirm-preparing {
@@ -4987,7 +4987,7 @@ body {
     min-width: 320px;
     max-width: 90vw;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #pickup-modal .modal-title {
@@ -5009,7 +5009,7 @@ body {
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #pickup-modal #confirm-pickup {

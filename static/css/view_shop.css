@@ -39,7 +39,7 @@
     font-size: 48px;
     font-weight: bold;
     color: white;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     border: 3px solid #bf9f4a;
     box-shadow: 0 4px 12px rgba(191, 159, 74, 0.2);
 }
@@ -57,7 +57,7 @@
 }
 
 .shop-name {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 2rem;
     color: #181818;
     margin: 0 0 12px 0;

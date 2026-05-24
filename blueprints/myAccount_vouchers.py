@@ -44,6 +44,7 @@ def myAccount_vouchers():
         # Get all buyer vouchers (limited to 100)
         all_vouchers_response = supabase.table('buyer_vouchers').select('''
             buyer_voucher_id,
+            voucher_id,
             times_remaining,
             used_at,
             claimed_at,
@@ -60,7 +61,28 @@ def myAccount_vouchers():
         ''').eq('buyer_id', buyer_id).eq('is_used', False).order('claimed_at', desc=True).limit(100).execute()
         
         print(f"📦 Total vouchers fetched: {len(all_vouchers_response.data) if all_vouchers_response.data else 0}")
-        
+
+        # Fallback for Railway: if the nested `vouchers` embed comes back
+        # empty, the page renders as if the buyer has no vouchers. Backfill
+        # the embedded data with a direct lookup keyed by voucher_id.
+        if all_vouchers_response.data:
+            missing_voucher_ids = list({
+                bv['voucher_id']
+                for bv in all_vouchers_response.data
+                if not bv.get('vouchers') and bv.get('voucher_id')
+            })
+            if missing_voucher_ids:
+                try:
+                    v_resp = supabase.table('vouchers').select(
+                        'voucher_id, voucher_code, voucher_name, voucher_type, discount_percent, start_date, end_date'
+                    ).in_('voucher_id', missing_voucher_ids).execute()
+                    vouchers_by_id = {v['voucher_id']: v for v in (v_resp.data or [])}
+                    for bv in all_vouchers_response.data:
+                        if not bv.get('vouchers') and bv.get('voucher_id'):
+                            bv['vouchers'] = vouchers_by_id.get(bv['voucher_id'])
+                except Exception as fb_err:
+                    print(f"⚠️ Vouchers fallback fetch failed: {fb_err}")
+
         # Get all unique voucher_ids to fetch shop counts in ONE query (NO N+1 QUERY)
         voucher_ids = [bv.get('vouchers', {}).get('voucher_id') for bv in all_vouchers_response.data if bv.get('vouchers', {}).get('voucher_id')]
         

@@ -540,7 +540,7 @@ html, body {
     letter-spacing: 3px;
     color: #181818;
     margin-bottom: 10px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
     text-decoration: none;
     cursor: pointer;
@@ -1019,7 +1019,7 @@ a[href*="view_shop"]:not(.view-shop-btn-product):hover p:first-child {
     padding: 4px 10px;
     border-radius: 2px;
     font-size: 0.8rem;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;

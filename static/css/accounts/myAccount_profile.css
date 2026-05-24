@@ -560,6 +560,13 @@
     opacity: 1;
 }
 
+/* Show hover overlay when initial-letter fallback is visible */
+.profile-picture-container:hover .profile-initial-large + .upload-overlay,
+.profile-picture-container:hover .profile-initial-large ~ .upload-overlay {
+    display: flex;
+    opacity: 1;
+}
+
 .upload-overlay i {
     font-size: 40px;
 }
@@ -586,7 +593,7 @@
 	margin-bottom: 12px;
 }
 .account-card-bg p {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.1rem;
 	color: #6d6552;
 	margin-bottom: 0;
@@ -617,7 +624,7 @@
 	text-align: center;
 }
 .browse-category-desc {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.08rem;
 	color: #6d6552;
 	text-align: center;
@@ -650,7 +657,7 @@ html, body {
 	letter-spacing: 3px;
 	color: #181818;
 	margin-bottom: 10px;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
 	text-decoration: none;
 	cursor: pointer;
@@ -685,7 +692,7 @@ html, body {
 	padding: 3px 12px;
 	border-radius: 2px;
 	font-size: 0.95rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;
@@ -1123,7 +1130,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .document-label {
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -1137,7 +1144,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	padding: 12px 16px;
 	border: 1.5px solid #e0d7c6;
 	border-radius: 8px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	background: white;
 	cursor: pointer;
@@ -1196,7 +1203,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .document-image-container .upload-placeholder span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 500;
 }
@@ -1239,7 +1246,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .document-image-container .upload-overlay span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	letter-spacing: 0.5px;
@@ -1257,7 +1264,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	color: #ffffff;
 	border: none;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -1299,7 +1306,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 
 
 .verification-status {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 	padding: 8px 16px;
@@ -1468,7 +1475,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 
 .id-form-group label {
 	display: block;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -1480,7 +1487,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	padding: 12px 16px;
 	border: 1.5px solid #e0d7c6;
 	border-radius: 8px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	background: white;
 	cursor: pointer;
@@ -1537,7 +1544,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .id-image-container .upload-placeholder span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 500;
 }
@@ -1580,7 +1587,7 @@ font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 .id-image-container .upload-overlay span {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	letter-spacing: 0.5px;

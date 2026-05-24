@@ -103,7 +103,7 @@
 	padding: 10px 12px 10px 38px;
 	border: 1.5px solid #e0d7c6;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	background: #fafbfc;
 	transition: all 0.2s;
@@ -119,7 +119,7 @@
 	padding: 10px 32px 10px 12px;
 	border: 1.5px solid #e0d7c6;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #2c2236;
 	background: #fafbfc;
@@ -150,7 +150,7 @@
 	gap: 8px;
 	padding: 8px 16px;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 }
@@ -201,7 +201,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	color: #2c2236;
 }
@@ -218,7 +218,7 @@
 .status-badge {
 	padding: 6px 14px;
 	border-radius: 20px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.8rem;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -268,7 +268,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	color: #2c2236;
@@ -349,7 +349,7 @@
 }
 
 .info-item label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.8rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -381,7 +381,7 @@
 	background: linear-gradient(135deg, #d3bd9b 0%, #c4a882 100%);
 	color: #ffffff;
 	border-radius: 16px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.75rem;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -395,7 +395,7 @@
 }
 
 .product-description label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.8rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -404,7 +404,7 @@
 }
 
 .product-description p {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	color: #4a4a4a;
 	line-height: 1.6;
@@ -418,7 +418,7 @@
 }
 
 .product-materials label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.8rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -427,7 +427,7 @@
 }
 
 .product-materials p {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	color: #4a4a4a;
 	line-height: 1.6;
@@ -438,7 +438,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	color: #6d6552;
 	margin-top: auto;
@@ -458,7 +458,7 @@
 }
 
 .product-variants-section label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.8rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -554,7 +554,7 @@
 }
 
 .color-name {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 	color: #2c2236;
@@ -620,7 +620,7 @@
 }
 
 .variant-sizes-section label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: #6d6552;
@@ -639,7 +639,7 @@
 	background: linear-gradient(135deg, #d3bd9b 0%, #c4a882 100%);
 	color: #ffffff;
 	border-radius: 12px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.75rem;
 	font-weight: 600;
 	white-space: nowrap;
@@ -660,7 +660,7 @@
 	gap: 8px;
 	padding: 10px 20px;
 	border-radius: 8px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -732,7 +732,7 @@
 	border-radius: 8px;
 	background: #ffffff;
 	color: #2c2236;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -753,7 +753,7 @@
 }
 
 .pagination-info {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #6d6552;
 }
@@ -806,7 +806,7 @@
 }
 
 .sub-tab-label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #2c2236;
 }
@@ -873,7 +873,7 @@
 
 #action-modal .modal-body {
 	margin-bottom: 24px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	color: #4a4a4a;
 	line-height: 1.5;
@@ -891,7 +891,7 @@
 	padding: 10px 28px;
 	font-size: 1rem;
 	cursor: pointer;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-weight: 600;
 	transition: all 0.2s;
 }
