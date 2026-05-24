@@ -2,7 +2,7 @@
 
 /* Sidebar Navigation Fixes */
 .main-tab {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-weight: 500;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .product-approvals-title {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 2rem;
 	font-weight: 700;
 	color: #181818;
@@ -91,7 +91,7 @@
 	border: none;
 	padding: 12px 28px;
 	border-radius: 4px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.95rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -156,7 +156,7 @@
 }
 
 .voucher-code {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1.1rem;
 	font-weight: 700;
 	color: #181818;
@@ -169,7 +169,7 @@
 	gap: 6px;
 	padding: 4px 12px;
 	border-radius: 20px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.75rem;
 	font-weight: 600;
 	white-space: nowrap;
@@ -188,7 +188,7 @@
 }
 
 .voucher-name {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1rem;
 	font-weight: 500;
 	color: #181818;
@@ -207,7 +207,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.85rem;
 	color: #666;
 }
@@ -231,7 +231,7 @@
 	border: none;
 	padding: 8px 16px;
 	border-radius: 4px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -263,7 +263,7 @@
 }
 
 .no-vouchers p {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1rem;
 	margin: 0;
 }
@@ -302,7 +302,7 @@
 }
 
 .modal-header h3 {
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1.5rem;
 	font-weight: 600;
 	color: #181818;
@@ -339,7 +339,7 @@
 
 .form-group label {
 	display: block;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.9rem;
 	font-weight: 600;
 	color: #181818;
@@ -352,7 +352,7 @@
 	padding: 10px 12px;
 	border: 1.5px solid #e0d7c6;
 	border-radius: 4px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 0.95rem;
 	color: #181818;
 	transition: border-color 0.2s;
@@ -384,7 +384,7 @@
 .btn-submit {
 	padding: 10px 24px;
 	border-radius: 4px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -455,14 +455,14 @@
 
 #delete-voucher-modal .modal-title {
 	font-size: 1.25rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	margin-bottom: 12px;
 	color: #181818;
 }
 
 #delete-voucher-modal .modal-message {
 	font-size: 0.95rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	margin-bottom: 18px;
 	color: #555;
 	line-height: 1.5;

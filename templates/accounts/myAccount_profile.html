@@ -8,7 +8,7 @@
 		<!-- Optimized Google Fonts - Combined into one request -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@700&family=Goodie&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/accounts/myAccount_profile.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/logout-modal.css') }}">
@@ -180,9 +180,10 @@
 				</form>
 				<div class="profile-vertical-divider"></div>
 				<div class="profile-image-section">
-					<div class="profile-picture-container" id="profilePictureContainer">
-						<img src="{{ url_for('static', filename='images/user.png') }}" alt="Profile Picture" id="profilePicturePreview" style="display: none;">
-						<div class="upload-placeholder" id="uploadPlaceholder">
+					<div class="profile-picture-container {% if user_profile and user_profile.profile_image %}has-image{% endif %}" id="profilePictureContainer">
+						<img src="{% if user_profile and user_profile.profile_image %}{% if user_profile.profile_image.startswith('http://') or user_profile.profile_image.startswith('https://') %}{{ user_profile.profile_image }}{% elif user_profile.profile_image.startswith('static/') %}/{{ user_profile.profile_image }}{% else %}{{ url_for('static', filename=user_profile.profile_image) }}{% endif %}{% else %}{{ url_for('static', filename='images/user.png') }}{% endif %}" alt="Profile Picture" id="profilePicturePreview" {% if not user_profile or not user_profile.profile_image %}style="display: none;"{% endif %}>
+						<div class="profile-initial-large" id="profileInitialLarge" {% if user_profile and user_profile.profile_image %}style="display:none;"{% endif %}>{{ user_profile.first_name[0].upper() if user_profile and user_profile.first_name else 'G' }}</div>
+						<div class="upload-placeholder" id="uploadPlaceholder" style="display:none;">
 							<i class="bi bi-camera"></i>
 							<span>Upload a Photo</span>
 						</div>

@@ -20,7 +20,7 @@
     color: #181818;
     margin-bottom: 18px;
     text-align: left;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     margin-right: 0;
 }
 .orders-card-box {
@@ -155,7 +155,7 @@
     text-align: center;
 }
 .order-status-number {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 1.45rem;
     color: #bfa14a;
     font-weight: 700;
@@ -246,7 +246,7 @@
     color: #181818;
     margin-bottom: 10px;
     margin-left: 50px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     text-decoration: none !important;
     border-bottom: none !important;
 }

@@ -38,7 +38,7 @@ body {
     letter-spacing: 3px;
     color: #181818;
     margin-bottom: 10px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
     text-decoration: none;
     cursor: pointer;
@@ -79,7 +79,7 @@ body {
     padding: 3px 12px;
     border-radius: 2px;
     font-size: 0.95rem;
-    font-family: 'Goodie', serif;
+    font-family: 'Playfair Display', serif;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -840,7 +840,7 @@ position: relative;
 }
 
 .voucher-discount {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 1.5rem;
     font-weight: 700;
     color: #D3BD9B;
@@ -1028,7 +1028,7 @@ position: relative;
     border: none;
     padding: 12px 28px;
     border-radius: 2px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -1115,7 +1115,7 @@ position: relative;
 
 .form-group label {
     display: block;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.9rem;
     font-weight: 600;
     color: #181818;
@@ -1128,7 +1128,7 @@ position: relative;
     padding: 10px 12px;
     border: 1.5px solid #e0d7c6;
     border-radius: 4px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.95rem;
     color: #181818;
     transition: border-color 0.2s;
@@ -1142,7 +1142,7 @@ position: relative;
 
 .form-group small {
     display: block;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.8rem;
     color: #666;
     margin-top: 4px;
@@ -1199,7 +1199,7 @@ position: relative;
     border: none;
     padding: 8px 16px;
     border-radius: 2px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -1230,7 +1230,7 @@ position: relative;
 }
 
 .no-vouchers p {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 1rem;
     margin: 0;
 }
@@ -1246,7 +1246,7 @@ position: relative;
 }
 
 .voucher-code {
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: #181818;
@@ -1259,7 +1259,7 @@ position: relative;
     gap: 6px;
     padding: 4px 12px;
     border-radius: 20px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
@@ -1297,7 +1297,7 @@ position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     font-size: 0.85rem;
     color: #666;
 }
@@ -1325,7 +1325,7 @@ position: relative;
 	color: #fff;
 	padding: 4px 10px;
 	border-radius: 20px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.75rem;
 	font-weight: 700;
 	white-space: nowrap;
@@ -1349,7 +1349,7 @@ position: relative;
 	color: #fff;
 	padding: 10px 28px;
 	border-radius: 4px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.95rem;
 	font-weight: 600;
 	text-decoration: none;

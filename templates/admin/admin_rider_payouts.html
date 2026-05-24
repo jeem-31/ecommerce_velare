@@ -6,11 +6,7 @@
 	<title>Veláre - Rider Payouts</title>
 	<link rel="icon" type="image/png" href="{{ url_for('static', filename='images/Velare Logo Tab 1.png') }}">
 	<!-- Google Fonts for aesthetic, expensive look -->
-	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Goodie&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/accounts/myAccount_profile.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_payments.css') }}">
@@ -108,7 +104,7 @@
 							</div>
 							<div class="rider-stat-info">
 								<div class="rider-stat-label">Total Earnings</div>
-								<div class="rider-stat-value">₱{{ "%.0f"|format(stats.total_earnings) }}</div>
+								<div class="rider-stat-value">�,�{{ "%.0f"|format(stats.total_earnings) }}</div>
 								<div class="rider-stat-change positive">
 									<i class="bi bi-arrow-up"></i> 14.2% from last month
 								</div>
@@ -164,7 +160,7 @@
 					<div class="commission-summary-card">
 						<div class="commission-stat">
 							<span class="commission-label">Total Deducted:</span>
-							<span class="commission-value" id="totalDeducted">₱0.00</span>
+							<span class="commission-value" id="totalDeducted">�,�0.00</span>
 						</div>
 						<div class="commission-note">
 							Platform pays riders when buyers use free shipping vouchers
@@ -219,7 +215,7 @@
 									</div>
 								</td>
 								<td>{{ rider.total_deliveries }}</td>
-								<td class="net-payout">₱{{ "%.0f"|format(rider.total_earnings) }}</td>
+								<td class="net-payout">�,�{{ "%.0f"|format(rider.total_earnings) }}</td>
 							</tr>
 							{% else %}
 							<tr>
@@ -263,18 +259,18 @@
 						<span class="breakdown-value" id="modalDeliveries">142</span>
 					</div>
 					<div class="breakdown-row">
-						<span class="breakdown-label">Base Delivery Fee (₱50/delivery)</span>
-						<span class="breakdown-value" id="modalBaseEarnings">₱7,100</span>
+						<span class="breakdown-label">Base Delivery Fee (�,�50/delivery)</span>
+						<span class="breakdown-value" id="modalBaseEarnings">�,�7,100</span>
 					</div>
 					<div class="breakdown-row highlight">
 						<span class="breakdown-label">Platform Commission</span>
 						<span class="breakdown-value">
-							<span id="modalCommissionPercent">15</span>% = <span id="modalCommissionAmount">₱1,065</span>
+							<span id="modalCommissionPercent">15</span>% = <span id="modalCommissionAmount">�,�1,065</span>
 						</span>
 					</div>
 					<div class="breakdown-row total">
 						<span class="breakdown-label">Net Payout</span>
-						<span class="breakdown-value" id="modalNetPayout">₱6,035</span>
+						<span class="breakdown-value" id="modalNetPayout">�,�6,035</span>
 					</div>
 				</div>
 			</div>

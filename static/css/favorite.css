@@ -307,7 +307,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 	letter-spacing: 3px;
 	color: #181818;
 	margin-bottom: 10px;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
 	text-decoration: none;
 	cursor: pointer;

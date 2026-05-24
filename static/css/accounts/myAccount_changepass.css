@@ -397,7 +397,7 @@ input[type="password"]::-ms-clear {
 	display: block;
 }
 #addressTabsModal select {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.08rem;
 	padding: 7px 10px;
 	border: 1.2px solid #d3bd9b;
@@ -460,7 +460,7 @@ input[type="password"]::-ms-clear {
 }
 #addAddressModal input,
 #addAddressModal select {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.08rem;
 	padding: 7px 10px;
 	border: 1.2px solid #d3bd9b;
@@ -972,7 +972,7 @@ a.main-tab:hover i {
 	margin-bottom: 12px;
 }
 .account-card-bg p {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.1rem;
 	color: #6d6552;
 	margin-bottom: 0;
@@ -1003,7 +1003,7 @@ a.main-tab:hover i {
 	text-align: center;
 }
 .browse-category-desc {
-	font-family: 'Cormorant Garamond', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.08rem;
 	color: #6d6552;
 	text-align: center;
@@ -1036,7 +1036,7 @@ html, body {
 	letter-spacing: 3px;
 	color: #181818;
 	margin-bottom: 10px;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
 	text-decoration: none;
 	cursor: pointer;
@@ -1071,7 +1071,7 @@ html, body {
 	padding: 3px 12px;
 	border-radius: 2px;
 	font-size: 0.95rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;

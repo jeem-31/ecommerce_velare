@@ -20,7 +20,7 @@
 	padding: 18px 40px 18px 40px;
 	z-index: 100;
 	border-top: none;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 }
 .cart-checkout-info {
 	display: flex;
@@ -35,7 +35,7 @@
 .cart-checkout-btn {
 	background: #181818;
 	color: #fff;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1.13rem;
 	font-weight: 700;
 	padding: 12px 38px;
@@ -83,7 +83,7 @@
 	padding: 3px 12px;
 	border-radius: 6px;
 		font-size: 0.78rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	white-space: nowrap;
 	opacity: 1;
 	pointer-events: none;
@@ -111,7 +111,7 @@
 	padding: 18px 28px;
 	margin: 0 32px 18px 32px;
 	min-height: 90px;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 }
 .cart-item-checkbox {
 	width: 18px;
@@ -236,7 +236,7 @@
 	letter-spacing: 3px;
 	color: #181818;
 	margin-bottom: 10px;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
 	text-decoration: none;
 	cursor: pointer;
@@ -271,7 +271,7 @@
 	padding: 3px 12px;
 	border-radius: 2px;
 	font-size: 0.95rem;
-	font-family: 'Goodie', serif;
+	font-family: 'Playfair Display', serif;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;

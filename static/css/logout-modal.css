@@ -45,7 +45,7 @@
 }
 #logout-modal .modal-title {
     font-size: 1.25rem;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     margin-bottom: 18px;
     color: #181818;
 }
@@ -60,7 +60,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 #logout-modal #confirm-logout {
     background: #181818;
@@ -131,7 +131,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #remove-favorite-modal #confirm-remove-favorite {
@@ -201,7 +201,7 @@
 
 #archive-modal .modal-message {
     font-size: 0.95rem;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     margin-bottom: 18px;
     color: #555;
     line-height: 1.5;
@@ -219,7 +219,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #archive-modal #confirm-archive {
@@ -305,7 +305,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #save-changes-modal #confirm-save-changes {
@@ -381,7 +381,7 @@
 
 #delete-product-modal .modal-message {
     font-size: 0.95rem;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     margin-bottom: 18px;
     color: #555;
     line-height: 1.5;
@@ -399,7 +399,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #delete-product-modal #confirm-delete-product {
@@ -475,7 +475,7 @@
 
 #action-confirm-modal .modal-message {
     font-size: 0.95rem;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
     margin-bottom: 18px;
     color: #555;
     line-height: 1.5;
@@ -493,7 +493,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #action-confirm-modal #confirm-action-btn {
@@ -571,7 +571,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #status-modal .modal-btn:hover {
@@ -625,7 +625,7 @@
     min-width: 320px;
     max-width: 90vw;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #accept-delivery-modal .modal-title {
@@ -647,7 +647,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #accept-delivery-modal #confirm-accept-delivery {
@@ -711,7 +711,7 @@
     min-width: 320px;
     max-width: 90vw;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #pickup-package-modal .modal-title {
@@ -733,7 +733,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #pickup-package-modal #confirm-pickup-package {
@@ -797,7 +797,7 @@
     min-width: 320px;
     max-width: 90vw;
     text-align: center;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #complete-delivery-modal .modal-title {
@@ -819,7 +819,7 @@
     padding: 8px 24px;
     font-size: 1rem;
     cursor: pointer;
-    font-family: 'Goudy Old Style', 'Goudy', serif;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 }
 
 #complete-delivery-modal #confirm-complete-delivery {

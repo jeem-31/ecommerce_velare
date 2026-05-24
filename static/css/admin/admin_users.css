@@ -1,4 +1,4 @@
-/* Admin Users Management CSS - Consistent with Veláre design system */
+/* Admin Users Management CSS - Consistent with VelÃ¡re design system */
 
 /* Ensure consistent body styling */
 html, body {
@@ -87,7 +87,7 @@ html, body {
 }
 
 .user-stat-label {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	color: #666;
 	text-transform: uppercase;
@@ -96,7 +96,7 @@ html, body {
 }
 
 .user-stat-value {
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1.8rem;
 	color: #bfa14a;
 	font-weight: 700;
@@ -140,14 +140,14 @@ html, body {
 	border: none;
 	outline: none;
 	flex: 1;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #181818;
 	background: transparent;
 }
 
 .filter-dropdown select {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	padding: 10px 15px;
 	border: 1.5px solid #e0d7c6;
@@ -226,7 +226,7 @@ html, body {
 
 .users-table td {
 	padding: 16px;
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #333;
 	vertical-align: middle;
@@ -247,7 +247,7 @@ html, body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-family: 'Cinzel', serif;
+	font-family: 'Playfair Display', serif;
 	font-size: 1.1rem;
 	font-weight: 700;
 	color: #bfa14a;
@@ -324,7 +324,7 @@ html, body {
 }
 
 .action-btn {
-	font-family: 'Montserrat', sans-serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	padding: 6px 12px;
@@ -450,7 +450,7 @@ select.address-select {
     border-style: none !important;
     border-color: transparent !important;
     border-radius: 0 !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif !important;
     font-size: 0.9rem !important;
     font-weight: 400 !important;
     color: #2c2236 !important;
@@ -498,7 +498,7 @@ select.address-select:focus {
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif !important;
     font-size: 0.9rem !important;
     font-weight: 400 !important;
     color: #2c2236 !important;

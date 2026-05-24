@@ -231,6 +231,7 @@ function handleFileSelect(e) {
             if (!img) {
                 // Create new image element
                 img = document.createElement('img');
+                img.id = 'profilePicturePreview';
                 img.style.width = '100%';
                 img.style.height = '100%';
                 img.style.objectFit = 'cover';
@@ -245,6 +246,11 @@ function handleFileSelect(e) {
                     <span>Change Photo</span>
                 `;
                 profilePictureContainer.appendChild(overlay);
+            } else {
+                // Hide initial-large if it exists
+                const initialLarge = profilePictureContainer.querySelector('.profile-initial-large');
+                if (initialLarge) initialLarge.style.display = 'none';
+                img.style.display = 'block';
             }
             img.src = event.target.result;
             profilePictureContainer.classList.add('has-image');
@@ -338,6 +344,7 @@ async function handleSaveProfile(e) {
                 const sidebarProfileInitial = document.getElementById('sidebarProfileInitial');
                 const profilePicturePreview = document.getElementById('profilePicturePreview');
                 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+                const profileInitialLarge = document.getElementById('profileInitialLarge');
                 const profilePictureContainer = document.getElementById('profilePictureContainer');
                 
                 if (sidebarProfileImg) {
@@ -350,9 +357,14 @@ async function handleSaveProfile(e) {
                 if (profilePicturePreview) {
                     profilePicturePreview.src = result.data.profile_image;
                     profilePicturePreview.classList.remove('hidden');
+                    profilePicturePreview.style.display = 'block';
                 }
                 if (uploadPlaceholder) {
                     uploadPlaceholder.classList.add('hidden');
+                    uploadPlaceholder.style.display = 'none';
+                }
+                if (profileInitialLarge) {
+                    profileInitialLarge.style.display = 'none';
                 }
                 if (profilePictureContainer) {
                     profilePictureContainer.classList.add('has-image');

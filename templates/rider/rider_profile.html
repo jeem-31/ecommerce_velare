@@ -6,10 +6,7 @@
     <title>Rider Profile - Veláre</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/Velare Logo Tab 1.png') }}">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Goodie&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/rider/rider_profile.css') }}">
@@ -145,24 +142,21 @@
                         <div class="profile-vertical-divider"></div>
                         
                         <div class="profile-image-section">
-                            <div class="profile-picture-container {% if rider and rider.profile_image %}has-image{% endif %}">
+                            <div class="profile-picture-container {% if rider and rider.profile_image %}has-image{% endif %}" id="profilePictureContainer">
                                 {% if rider and rider.profile_image %}
                                     {% if rider.profile_image.startswith('http://') or rider.profile_image.startswith('https://') %}
-                                        <img src="{{ rider.profile_image }}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img src="{{ rider.profile_image }}" alt="Profile Picture" id="profilePicturePreview" style="width: 100%; height: 100%; object-fit: cover;">
                                     {% elif rider.profile_image.startswith('static/') %}
-                                        <img src="/{{ rider.profile_image }}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img src="/{{ rider.profile_image }}" alt="Profile Picture" id="profilePicturePreview" style="width: 100%; height: 100%; object-fit: cover;">
                                     {% else %}
-                                        <img src="{{ url_for('static', filename=rider.profile_image) }}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <img src="{{ url_for('static', filename=rider.profile_image) }}" alt="Profile Picture" id="profilePicturePreview" style="width: 100%; height: 100%; object-fit: cover;">
                                     {% endif %}
                                     <div class="upload-overlay">
                                         <i class="bi bi-camera"></i>
                                         <span>Change Photo</span>
                                     </div>
                                 {% else %}
-                                    <div class="upload-placeholder">
-                                        <i class="bi bi-person"></i>
-                                        <span>Upload Photo</span>
-                                    </div>
+                                    <div class="profile-initial-large" id="profileInitialLarge">{{ rider.first_name[0].upper() if rider and rider.first_name else 'R' }}</div>
                                     <div class="upload-overlay" style="display: none;">
                                         <i class="bi bi-camera"></i>
                                         <span>Change Photo</span>

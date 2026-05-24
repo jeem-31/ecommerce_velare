@@ -38,7 +38,7 @@ body {
     letter-spacing: 3px;
     color: #181818;
     margin-bottom: 10px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Playfair Display', serif;
     text-shadow: 0 2px 12px rgba(191,161,74,0.08), 0 1px 0 #fffbe8;
     text-decoration: none;
     cursor: pointer;
@@ -79,7 +79,7 @@ body {
     padding: 3px 12px;
     border-radius: 2px;
     font-size: 0.95rem;
-    font-family: 'Goodie', serif;
+    font-family: 'Playfair Display', serif;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -643,7 +643,7 @@ body {
 }
 
 .item-image-placeholder::before {
-    content: "📷";
+    content: "ðŸ“·";
     font-size: 1.2rem;
     opacity: 0.6;
 }

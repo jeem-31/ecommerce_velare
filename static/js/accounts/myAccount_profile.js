@@ -153,6 +153,7 @@ function handleFileSelect(e) {
         const profilePicturePreview = document.getElementById('profilePicturePreview');
         const uploadPlaceholder = document.getElementById('uploadPlaceholder');
         const profilePictureContainer = document.getElementById('profilePictureContainer');
+        const profileInitialLarge = document.getElementById('profileInitialLarge');
         
         if (profilePicturePreview) {
             profilePicturePreview.src = event.target.result;
@@ -160,6 +161,9 @@ function handleFileSelect(e) {
         }
         if (uploadPlaceholder) {
             uploadPlaceholder.style.display = 'none';
+        }
+        if (profileInitialLarge) {
+            profileInitialLarge.style.display = 'none';
         }
         if (profilePictureContainer) {
             profilePictureContainer.classList.add('has-image');
@@ -297,6 +301,8 @@ function populateProfileForm(profile) {
     const uploadPlaceholder = document.getElementById('uploadPlaceholder');
     const profilePictureContainer = document.getElementById('profilePictureContainer');
     const sidebarProfileImg = document.getElementById('sidebarProfileImg');
+    const sidebarProfileInitial = document.getElementById('sidebarProfileInitial');
+    const profileInitialLarge = document.getElementById('profileInitialLarge');
     
     if (profile.profile_image) {
         // Handle both Supabase URLs and local paths
@@ -317,6 +323,9 @@ function populateProfileForm(profile) {
         if (uploadPlaceholder) {
             uploadPlaceholder.style.display = 'none';
         }
+        if (profileInitialLarge) {
+            profileInitialLarge.style.display = 'none';
+        }
         if (profilePictureContainer) {
             profilePictureContainer.classList.add('has-image');
         }
@@ -324,20 +333,33 @@ function populateProfileForm(profile) {
         if (sidebarProfileImg) {
             sidebarProfileImg.style.backgroundImage = `url('${imageSrc}')`;
         }
+        if (sidebarProfileInitial) {
+            sidebarProfileInitial.style.display = 'none';
+        }
     } else {
-        // Clear profile image if user has none
+        // Clear profile image if user has none - show initial letter fallback
         if (profilePicturePreview) {
             profilePicturePreview.style.display = 'none';
         }
         if (uploadPlaceholder) {
-            uploadPlaceholder.style.display = 'block';
+            uploadPlaceholder.style.display = 'none';
+        }
+        if (profileInitialLarge) {
+            profileInitialLarge.style.display = 'flex';
+            const firstName = profile.first_name || '';
+            profileInitialLarge.textContent = firstName ? firstName.charAt(0).toUpperCase() : 'G';
         }
         if (profilePictureContainer) {
             profilePictureContainer.classList.remove('has-image');
         }
-        // Clear sidebar profile image
+        // Clear sidebar profile image and show initial
         if (sidebarProfileImg) {
             sidebarProfileImg.style.backgroundImage = 'none';
+        }
+        if (sidebarProfileInitial) {
+            sidebarProfileInitial.style.display = 'flex';
+            const firstName = profile.first_name || '';
+            sidebarProfileInitial.textContent = firstName ? firstName.charAt(0).toUpperCase() : 'G';
         }
     }
 
@@ -535,9 +557,18 @@ async function handleProfileSubmit(e) {
                 const profilePicturePreview = document.getElementById('profilePicturePreview');
                 const sidebarProfileImg = document.getElementById('sidebarProfileImg');
                 const sidebarProfileInitial = document.getElementById('sidebarProfileInitial');
+                const profileInitialLarge = document.getElementById('profileInitialLarge');
+                const profilePictureContainer = document.getElementById('profilePictureContainer');
                 
                 if (profilePicturePreview) {
                     profilePicturePreview.src = imageSrc;
+                    profilePicturePreview.style.display = 'block';
+                }
+                if (profileInitialLarge) {
+                    profileInitialLarge.style.display = 'none';
+                }
+                if (profilePictureContainer) {
+                    profilePictureContainer.classList.add('has-image');
                 }
                 // Update sidebar profile image
                 if (sidebarProfileImg) {

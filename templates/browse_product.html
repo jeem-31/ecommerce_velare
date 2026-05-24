@@ -8,7 +8,7 @@
     <!-- Optimized Google Fonts - Combined into one request with display=swap for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@700&family=Goodie&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/browse_product.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
@@ -283,7 +283,7 @@
                         <div class="product-info">
                             <h3 class="product-name">{{ product.product_name }}</h3>
                             <p class="product-material" style="white-space: pre-wrap;"><strong>Materials:</strong> {{ product.materials or 'Premium Materials' }}</p>
-                            <p class="product-price">₱{{ "{:,.2f}".format(product.price) }}</p>
+                            <p class="product-price">�,�{{ "{:,.2f}".format(product.price) }}</p>
                             {% if product.rating > 0 %}
                                 <p style="font-size: 0.85rem; color: #bf9f4a; margin-top: 5px;">⭐ {{ "%.1f"|format(product.rating) }} ({{ product.total_reviews }} reviews)</p>
                             {% endif %}

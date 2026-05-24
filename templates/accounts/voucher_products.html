@@ -8,7 +8,7 @@
     <!-- Optimized Google Fonts - Combined into one request -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@700&family=Goodie&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100;300;400;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/browse_product.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
@@ -72,8 +72,8 @@
                 <i class="bi bi-{% if voucher['voucher_type'] == 'free_shipping' %}truck{% else %}percent{% endif %}"></i>
             </div>
             <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 12px;">{{ voucher['voucher_name'] }}</h1>
-            <p style="font-family: 'Montserrat', sans-serif; font-size: 1.1rem; margin-bottom: 16px; opacity: 0.95;">{{ voucher['discount_percent'] }}% OFF • Valid until {{ voucher['end_date'].strftime('%B %d, %Y') }}</p>
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; backdrop-filter: blur(10px);">
+            <p style="font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif; font-size: 1.1rem; margin-bottom: 16px; opacity: 0.95;">{{ voucher['discount_percent'] }}% OFF �?� Valid until {{ voucher['end_date'].strftime('%B %d, %Y') }}</p>
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif; font-size: 0.95rem; backdrop-filter: blur(10px);">
                 <i class="bi bi-shop"></i> {{ voucher['shop_count'] }} Shop{{ 's' if voucher['shop_count'] > 1 else '' }}
             </div>
         </div>
@@ -135,7 +135,7 @@
                         <div class="product-info">
                             <h3 class="product-name">{{ product.product_name }}</h3>
                             <p class="product-material">{{ product.materials or 'Premium Materials' }}</p>
-                            <p class="product-price">₱{{ "%.2f"|format(product.price) }}</p>
+                            <p class="product-price">�,�{{ "%.2f"|format(product.price) }}</p>
                             {% if product.rating and product.rating > 0 %}
                                 <p style="font-size: 0.85rem; color: #bf9f4a; margin-top: 5px;">⭐ {{ "%.1f"|format(product.rating) }} ({{ product.total_reviews or 0 }} reviews)</p>
                             {% endif %}

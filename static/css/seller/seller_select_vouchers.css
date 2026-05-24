@@ -147,7 +147,7 @@ html, body {
 }
 
 .section-description {
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.9rem;
 	color: #666;
 	margin: 0 0 20px 0;
@@ -216,7 +216,7 @@ html, body {
 }
 
 .voucher-code {
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1.1rem;
 	font-weight: 700;
 	color: #181818;
@@ -229,7 +229,7 @@ html, body {
 	gap: 6px;
 	padding: 4px 12px;
 	border-radius: 20px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.75rem;
 	font-weight: 600;
 	white-space: nowrap;
@@ -267,7 +267,7 @@ html, body {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	color: #666;
 }
@@ -292,7 +292,7 @@ html, body {
 	border: none;
 	padding: 8px 16px;
 	border-radius: 4px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -314,7 +314,7 @@ html, body {
 	border: none;
 	padding: 8px 16px;
 	border-radius: 4px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -336,7 +336,7 @@ html, body {
 	border: none;
 	padding: 8px 16px;
 	border-radius: 4px;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 0.85rem;
 	font-weight: 600;
 	cursor: not-allowed;
@@ -362,7 +362,7 @@ html, body {
 }
 
 .no-vouchers p {
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	font-size: 1rem;
 	margin: 0;
 }
@@ -419,7 +419,7 @@ html, body {
 
 #select-voucher-modal .modal-message {
 	font-size: 0.95rem;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	margin-bottom: 18px;
 	color: #555;
 	line-height: 1.5;
@@ -506,7 +506,7 @@ html, body {
 
 #remove-voucher-modal .modal-message {
 	font-size: 0.95rem;
-	font-family: 'Goudy Old Style', 'Goudy', serif;
+	font-family: 'Goudy Bookletter 1911', 'Goudy Old Style', serif;
 	margin-bottom: 18px;
 	color: #555;
 	line-height: 1.5;
