@@ -155,17 +155,40 @@ def submit_report():
         reported_user = user_response.data[0]
         print(f"👤 Reported user_id: {reported_user['user_id']}")
         
-        # Handle file upload
+        # Handle file upload to Supabase Storage so evidence is reachable
+        # from any device. Saving locally doesn't survive Railway redeploys.
         evidence_path = None
         if 'evidence' in request.files:
             file = request.files['evidence']
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
-                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                evidence_path = file_path.replace('\\', '/')
-                print(f"📎 Evidence uploaded: {evidence_path}")
+                try:
+                    import uuid
+
+                    file.seek(0)
+                    file_content = file.read()
+                    if file_content:
+                        file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        unique_id = str(uuid.uuid4())[:8]
+                        unique_filename = (
+                            f"static/uploads/reports/seller_report_"
+                            f"{session.get('user_id')}_{timestamp}_{unique_id}.{file_ext}"
+                        )
+
+                        supabase = get_supabase_client()
+                        if supabase:
+                            content_type = file.content_type or 'image/jpeg'
+                            supabase.storage.from_('Images').upload(
+                                path=unique_filename,
+                                file=file_content,
+                                file_options={"content-type": content_type}
+                            )
+                            evidence_path = supabase.storage.from_('Images').get_public_url(unique_filename)
+                            print(f"📎 Evidence uploaded to Supabase: {evidence_path}")
+                except Exception as upload_error:
+                    print(f"⚠️ Seller report evidence upload failed: {upload_error}")
+                    import traceback
+                    traceback.print_exc()
         
         # Insert report
         report_data = {

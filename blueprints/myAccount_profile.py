@@ -282,37 +282,66 @@ def upload_id():
         
         if not allowed_file(file.filename):
             return jsonify({'success': False, 'message': 'Invalid file type. Only PNG, JPG, and JPEG are allowed'}), 400
-        
-        # Create ID uploads folder
-        ID_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads', 'buyer_ids')
-        os.makedirs(ID_UPLOAD_FOLDER, exist_ok=True)
-        
-        # Save file
-        filename = secure_filename(f"buyer_{session['user_id']}_{file.filename}")
-        file_path = os.path.join(ID_UPLOAD_FOLDER, filename)
-        file.save(file_path)
-        
-        # Save to database
+
+        # Save to database (need supabase client for both DB write and storage)
         supabase = get_supabase()
         if not supabase:
             return jsonify({'success': False, 'message': 'Database connection failed'}), 500
-        
+
         # Get buyer_id
         buyer = get_buyer_by_user_id(session['user_id'])
-        
+
         if not buyer:
             return jsonify({'success': False, 'message': 'Buyer not found'}), 404
-        
+
         buyer_id = buyer['buyer_id']
-        
+
         # Get ID type from form
         id_type = request.form.get('id_type', '')
-        
+
         if not id_type:
             return jsonify({'success': False, 'message': 'Please select an ID type'}), 400
-        
-        # Update buyer with ID path and type
-        id_path = f"/static/uploads/buyer_ids/{filename}"
+
+        # Upload ID image to Supabase Storage so it's reachable from any
+        # device. Saving locally would only work on the box that handled the
+        # request and disappears entirely on Railway between deploys.
+        try:
+            import uuid
+            from datetime import datetime
+
+            file.seek(0)
+            file_content = file.read()
+            if not file_content:
+                return jsonify({'success': False, 'message': 'File is empty or corrupted'}), 400
+
+            file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_id = str(uuid.uuid4())[:8]
+            unique_filename = (
+                f"static/uploads/buyer_ids/buyer_{session['user_id']}_"
+                f"{id_type.replace(' ', '_')}_{timestamp}_{unique_id}.{file_ext}"
+            )
+
+            content_type = file.content_type or 'image/jpeg'
+            print(f"📤 Uploading buyer ID to Supabase: {unique_filename}")
+            print(f"📦 File size: {len(file_content)} bytes")
+
+            supabase.storage.from_('Images').upload(
+                path=unique_filename,
+                file=file_content,
+                file_options={"content-type": content_type}
+            )
+
+            id_path = supabase.storage.from_('Images').get_public_url(unique_filename)
+            print(f"✅ Buyer ID uploaded to Supabase: {id_path}")
+
+        except Exception as upload_error:
+            print(f"❌ Failed to upload buyer ID to Supabase: {upload_error}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'success': False, 'message': 'Failed to upload ID file'}), 500
+
+        # Update buyer with the public Supabase URL and ID type
         update_response = supabase.table('buyers').update({
             'id_file_path': id_path,
             'id_type': id_type
@@ -329,4 +358,6 @@ def upload_id():
         
     except Exception as e:
         print(f"Error uploading ID: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'message': 'An error occurred while uploading'}), 500
