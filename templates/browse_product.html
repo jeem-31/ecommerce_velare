@@ -270,14 +270,14 @@
                         <div class="product-image-placeholder">
                             {% if product.primary_image %}
                                 {% if product.primary_image.startswith('http://') or product.primary_image.startswith('https://') %}
-                                    <img src="{{ product.primary_image }}" alt="{{ product.product_name }}">
+                                    <img src="{{ product.primary_image }}" alt="{{ product.product_name }}" loading="lazy" decoding="async">
                                 {% elif product.primary_image.startswith('static/') %}
-                                    <img src="/{{ product.primary_image }}" alt="{{ product.product_name }}">
+                                    <img src="/{{ product.primary_image }}" alt="{{ product.product_name }}" loading="lazy" decoding="async">
                                 {% else %}
-                                    <img src="{{ url_for('static', filename=product.primary_image) }}" alt="{{ product.product_name }}">
+                                    <img src="{{ url_for('static', filename=product.primary_image) }}" alt="{{ product.product_name }}" loading="lazy" decoding="async">
                                 {% endif %}
                             {% else %}
-                                <img src="{{ url_for('static', filename='images/sampleimage1.jpg') }}" alt="{{ product.product_name }}">
+                                <img src="{{ url_for('static', filename='images/sampleimage1.jpg') }}" alt="{{ product.product_name }}" loading="lazy" decoding="async">
                             {% endif %}
                         </div>
                         <div class="product-info">
@@ -545,6 +545,5 @@
     });
   </script>
   <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-  <script defer src="{{ url_for('static', filename='js/category-carousel.js') }}"></script>
 </body>
 </html>

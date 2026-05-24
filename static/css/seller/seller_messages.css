@@ -259,6 +259,21 @@ html, body {
 	border: 2px solid rgba(211, 189, 155, 0.3);
 }
 
+/* Chat header initial fallback (matches .chat-avatar img sizing) */
+.avatar-initial.chat-avatar-initial {
+	width: 45px;
+	height: 45px;
+	font-size: 1.1rem;
+}
+
+/* Message bubble initial fallback (matches .message-avatar img sizing) */
+.avatar-initial.message-avatar-initial {
+	width: 32px;
+	height: 32px;
+	font-size: 0.9rem;
+	border-width: 1px;
+}
+
 /* Contact Type Badge */
 .contact-type-badge {
 	position: absolute;

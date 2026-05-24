@@ -17,8 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // On other pages, check for notifications
         updateNotificationBadgeFromAPI();
         
-        // Update badge every 5 seconds (more frequent for real-time updates)
-        setInterval(updateNotificationBadgeFromAPI, 5000);
+        // Update badge every 5 seconds (skipped while tab is hidden)
+        setInterval(() => {
+            if (document.hidden) return;
+            updateNotificationBadgeFromAPI();
+        }, 5000);
     }
     
     // Listen for notification updates from other tabs/pages

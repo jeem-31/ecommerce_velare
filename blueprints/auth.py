@@ -14,6 +14,7 @@ from email.mime.multipart import MIMEMultipart
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_config import get_db_connection, close_db_connection, get_supabase_client
 from utils.file_manager import save_user_document, allowed_file as check_allowed_file
+from utils.password_utils import hash_password, verify_password, needs_upgrade
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -316,10 +317,24 @@ def login_post():
                 return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
             
             user = response.data[0]
-            
-            # Check password (plain text comparison)
-            if user['password'] != password:
+
+            # Verify password. verify_password() handles both new bcrypt hashes
+            # and legacy plain-text rows (so existing users can still log in).
+            if not verify_password(password, user.get('password')):
                 return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+
+            # Transparent upgrade: if this user's row still holds a plain-text
+            # password, re-hash it now that we've verified it. The user sees no
+            # difference; the next login will use the new hash directly.
+            if needs_upgrade(user.get('password')):
+                try:
+                    supabase.table('users').update(
+                        {'password': hash_password(password)}
+                    ).eq('user_id', user['user_id']).execute()
+                    print(f"🔒 Upgraded legacy password to bcrypt for user_id={user['user_id']}")
+                except Exception as upgrade_error:
+                    # Don't block login if the upgrade write fails — log and move on.
+                    print(f"⚠️ Password upgrade failed for user_id={user['user_id']}: {upgrade_error}")
             
             # Check user status - only 'active' users can login
             if user['status'] != 'active':
@@ -599,7 +614,7 @@ def register_buyer():
             from datetime import datetime
             user_data = {
                 'email': email,
-                'password': password,
+                'password': hash_password(password),
                 'user_type': 'buyer',
                 'status': 'pending',
                 'created_at': datetime.now().isoformat()
@@ -773,7 +788,7 @@ def register_seller():
             # Insert into users table with PENDING status
             user_data = {
                 'email': email,
-                'password': password,
+                'password': hash_password(password),
                 'user_type': 'seller',
                 'status': 'pending',
                 'created_at': datetime.now().isoformat()
@@ -946,7 +961,7 @@ def register_rider():
             # Insert into users table with PENDING status
             user_data = {
                 'email': email,
-                'password': password,
+                'password': hash_password(password),
                 'user_type': 'rider',
                 'status': 'pending',
                 'created_at': datetime.now().isoformat()
@@ -1217,7 +1232,7 @@ def reset_password_post():
             
             # Update password and clear reset token
             update_response = supabase.table('users').update({
-                'password': new_password,
+                'password': hash_password(new_password),
                 'reset_token': None,
                 'reset_token_expiry': None
             }).eq('user_id', user['user_id']).execute()

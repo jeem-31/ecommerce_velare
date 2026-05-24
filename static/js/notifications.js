@@ -24,8 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch notifications on page load
     fetchNotifications();
     
-    // Refresh notifications every 30 seconds
-    setInterval(fetchNotifications, 30000);
+    // Refresh notifications every 30 seconds (skipped while tab is hidden)
+    setInterval(() => {
+        if (document.hidden) return;
+        fetchNotifications();
+    }, 30000);
     
     async function fetchNotifications() {
         try {

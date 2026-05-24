@@ -813,10 +813,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button class="action-btn edit-btn" title="Edit" data-product-id="${product.product_id}">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="action-btn archive-btn" title="${product.is_active ? 'Archive' : 'Unarchive'}" data-product-id="${product.product_id}" data-is-active="${product.is_active}">
+                            <button class="action-btn archive-btn" title="${product.is_active ? (product.has_ongoing_orders ? 'Cannot archive yet - product has ongoing orders. Complete them first.' : 'Archive') : 'Unarchive'}" data-product-id="${product.product_id}" data-is-active="${product.is_active}" data-has-ongoing-orders="${product.has_ongoing_orders ? 'true' : 'false'}">
                                 <i class="bi ${product.is_active ? 'bi-archive' : 'bi-arrow-counterclockwise'}"></i>
                             </button>
-                            <button class="action-btn delete-btn" title="${product.has_delivered_orders ? 'Cannot delete - product has been delivered' : 'Delete'}" data-product-id="${product.product_id}" ${product.has_delivered_orders ? 'disabled' : ''}>
+                            <button class="action-btn delete-btn" title="${product.has_orders ? 'Cannot delete - product has existing orders. Archive it instead.' : 'Delete'}" data-product-id="${product.product_id}" ${product.has_orders ? 'disabled' : ''}>
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -1069,11 +1069,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     const productId = this.dataset.productId;
                     const isActiveRaw = this.dataset.isActive;
                     const isActive = isActiveRaw === 'true' || isActiveRaw === '1' || isActiveRaw === 1 || isActiveRaw === true;
+                    const hasOngoingOrders = this.dataset.hasOngoingOrders === 'true';
                     const row = this.closest('tr');
                     const productName = row.querySelector('.product-name').textContent;
-                    
-                    console.log('Archive button clicked:', { productId, isActiveRaw, isActive, datasetValue: this.dataset.isActive });
-                    
+
+                    console.log('Archive button clicked:', { productId, isActiveRaw, isActive, hasOngoingOrders });
+
+                    // If the seller is trying to ARCHIVE a product that still has
+                    // ongoing orders, show a clear notification and skip the modal
+                    // entirely. The backend will block the request anyway, but
+                    // intercepting here means the seller sees the reason instantly.
+                    if (isActive && hasOngoingOrders) {
+                        showNotification(
+                            `Cannot archive "${productName}" yet. It has ongoing orders that need to be completed or cancelled first.`,
+                            'error'
+                        );
+                        return;
+                    }
+
                     // Show archive/unarchive modal
                     showArchiveModal(productId, productName, isActive);
                 });
@@ -1084,6 +1097,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.addEventListener('click', function(event) {
                     event.preventDefault();
                     event.stopPropagation();
+                    if (this.disabled) return;
                     const productId = this.dataset.productId;
                     const row = this.closest('tr');
                     const productName = row.querySelector('.product-name').textContent;
@@ -2724,18 +2738,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 }
             });
-            
-            const result = await response.json();
-            
+
+            const result = await response.json().catch(() => ({}));
+
             if (!response.ok || !result.success) {
+                // Friendlier handling for the "ongoing orders" block (HTTP 409).
+                // The backend returns reason='ongoing_orders' plus a count and
+                // breakdown so we can show something specific to the seller.
+                if (response.status === 409 && result.reason === 'ongoing_orders') {
+                    let extra = '';
+                    if (Array.isArray(result.sample_order_numbers) && result.sample_order_numbers.length) {
+                        extra = ` (e.g. ${result.sample_order_numbers.slice(0, 2).join(', ')})`;
+                    }
+                    showNotification(
+                        (result.message || 'Cannot archive product right now.') + extra,
+                        'error'
+                    );
+                    // Refresh so the UI's has_ongoing_orders flag is up to date.
+                    await fetchAndDisplayProducts();
+                    return;
+                }
                 throw new Error(result.message || 'Failed to archive product');
             }
-            
-            showNotification('Product archived successfully!', 'success');
-            
+
+            showNotification(result.message || 'Product archived successfully!', 'success');
+
             // Refresh the product list immediately (no delay needed)
             await fetchAndDisplayProducts();
-            
+
         } catch (error) {
             console.error('Error archiving product:', error);
             showNotification(error.message || 'Failed to archive product', 'error');

@@ -71,7 +71,10 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 app.config['SESSION_COOKIE_NAME'] = 'velare_session'
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching
+# NOTE: SEND_FILE_MAX_AGE_DEFAULT is configured above based on FLASK_ENV.
+# Static assets (CSS/JS/images) get a 1-year cache in production and 0 in dev.
+# Protected HTML pages still get explicit no-cache headers via add_cache_control_headers
+# below, so we don't need to disable static caching globally.
 
 # Initialize Flask-Mail
 
@@ -132,80 +135,117 @@ app.register_blueprint(rider_report_user_bp)
 app.register_blueprint(admin_user_reports_bp)
 
 # Add cache control headers for admin pages to prevent back button access after logout
+# How long to trust a cached "active" status before re-checking with Supabase.
+# Suspensions/bans need to be enforced quickly but we don't want to query the
+# DB on every single tab navigation.
+SUSPENSION_CHECK_CACHE_SECONDS = 60
+
+
 @app.before_request
 def check_user_suspension():
-    """Check if logged-in user is suspended or banned and force logout"""
+    """Check if logged-in user is suspended or banned and force logout.
+
+    Optimized: results are cached in the session for SUSPENSION_CHECK_CACHE_SECONDS
+    so a normal user pays the Supabase round-trip at most once per minute instead
+    of once per tab switch. Active users also exit before issuing the second
+    suspension-details query.
+    """
     from flask import session, redirect, url_for, flash, request
     from database.db_config import get_supabase_client
-    
-    # Skip check for static files, login page, and API endpoints
-    if request.path.startswith('/static') or \
-       request.path == '/login' or \
-       request.path == '/register' or \
-       request.path == '/' or \
-       request.endpoint == 'auth.login_post':
+    import time
+
+    # Skip check for static files, login/register, root, the login POST endpoint,
+    # the logout endpoint, the health endpoint (called by Docker/Railway probes),
+    # and the favicon.
+    path = request.path
+    if (path.startswith('/static') or
+            path == '/login' or
+            path == '/register' or
+            path == '/' or
+            path == '/health' or
+            path == '/favicon.ico' or
+            request.endpoint in ('auth.login_post', 'auth.logout')):
         return None
-    
-    # Check if user is logged in
-    if 'user_id' in session and 'user_type' in session:
-        user_id = session['user_id']
-        user_type = session['user_type']
-        
-        # Skip check for admin users
-        if user_type == 'admin':
+
+    if 'user_id' not in session or 'user_type' not in session:
+        return None
+
+    user_type = session['user_type']
+
+    # Admins are not subject to suspension checks.
+    if user_type == 'admin':
+        return None
+
+    # Use a per-session cache so we don't hit Supabase on every navigation.
+    now = time.time()
+    cached_at = session.get('_status_checked_at', 0)
+    if now - cached_at < SUSPENSION_CHECK_CACHE_SECONDS:
+        return None
+
+    user_id = session['user_id']
+
+    try:
+        supabase = get_supabase_client()
+        if not supabase:
             return None
-        
-        try:
-            supabase = get_supabase_client()
-            
-            # Check user status
-            user_response = supabase.table('users').select('status').eq('user_id', user_id).execute()
-            
-            if user_response.data and user_response.data[0]['status'] in ['suspended', 'banned']:
-                user = user_response.data[0]
-                
-                # Get suspension details
-                suspension_end = None
-                suspension_reason = None
-                
-                if user_type == 'buyer':
-                    suspension_response = supabase.table('buyers').select('suspension_end, suspension_reason').eq('user_id', user_id).execute()
-                elif user_type == 'seller':
-                    suspension_response = supabase.table('sellers').select('suspension_end, suspension_reason').eq('user_id', user_id).execute()
-                elif user_type == 'rider':
-                    suspension_response = supabase.table('riders').select('suspension_end, suspension_reason').eq('user_id', user_id).execute()
-                
-                if suspension_response.data:
-                    suspension_data = suspension_response.data[0]
-                    suspension_end = suspension_data.get('suspension_end')
-                    suspension_reason = suspension_data.get('suspension_reason')
-                
-                # Clear session (force logout)
-                session.clear()
-                
-                # Format message
-                if user['status'] == 'suspended' and suspension_end:
-                    from datetime import datetime
-                    # Parse ISO datetime string
-                    end_date_obj = datetime.fromisoformat(suspension_end.replace('Z', '+00:00'))
-                    end_date = end_date_obj.strftime('%B %d, %Y')
-                    message = f'Your account has been suspended until {end_date}.'
-                    if suspension_reason:
-                        message += f' Reason: {suspension_reason}'
-                    elif user['status'] == 'banned':
-                        message = 'Your account has been permanently banned.'
-                        if suspension_reason:
-                            message += f' Reason: {suspension_reason}'
-                    else:
-                        message = 'Your account has been suspended. Please contact support.'
-                    
-                    flash(message, 'error')
-                    
-                    return redirect(url_for('auth.login'))
-                
-        except Exception as e:
-            print(f"❌ Error checking user suspension: {e}")
-    
+
+        user_response = supabase.table('users').select('status').eq('user_id', user_id).execute()
+
+        if not user_response.data:
+            # User row missing — refresh cache and let downstream handlers decide.
+            session['_status_checked_at'] = now
+            return None
+
+        status = user_response.data[0].get('status')
+
+        # Happy path: user is active, refresh cache and skip the second query.
+        if status not in ('suspended', 'banned'):
+            session['_status_checked_at'] = now
+            return None
+
+        # Suspended/banned path. Fetch reason + end date from the role table.
+        suspension_end = None
+        suspension_reason = None
+
+        role_table = {
+            'buyer': 'buyers',
+            'seller': 'sellers',
+            'rider': 'riders',
+        }.get(user_type)
+
+        if role_table:
+            suspension_response = supabase.table(role_table).select(
+                'suspension_end, suspension_reason'
+            ).eq('user_id', user_id).execute()
+            if suspension_response.data:
+                suspension_data = suspension_response.data[0]
+                suspension_end = suspension_data.get('suspension_end')
+                suspension_reason = suspension_data.get('suspension_reason')
+
+        # Force logout.
+        session.clear()
+
+        # Format the flash message exactly as before.
+        if status == 'suspended' and suspension_end:
+            from datetime import datetime
+            end_date_obj = datetime.fromisoformat(suspension_end.replace('Z', '+00:00'))
+            end_date = end_date_obj.strftime('%B %d, %Y')
+            message = f'Your account has been suspended until {end_date}.'
+            if suspension_reason:
+                message += f' Reason: {suspension_reason}'
+        elif status == 'banned':
+            message = 'Your account has been permanently banned.'
+            if suspension_reason:
+                message += f' Reason: {suspension_reason}'
+        else:
+            message = 'Your account has been suspended. Please contact support.'
+
+        flash(message, 'error')
+        return redirect(url_for('auth.login'))
+
+    except Exception as e:
+        print(f"❌ Error checking user suspension: {e}")
+
     return None
 
 @app.after_request
@@ -223,6 +263,16 @@ def add_cache_control_headers(response):
         response.headers['Expires'] = '0'
     
     return response
+
+
+# Lightweight health check used by Docker, docker-compose, and Railway. Must
+# be cheap and not touch external services so a transient Supabase outage
+# doesn't make the container restart in a loop.
+@app.route('/health')
+def health_check():
+    from flask import jsonify
+    return jsonify({'status': 'ok'}), 200
+
 
 if __name__ == '__main__':
     import os
