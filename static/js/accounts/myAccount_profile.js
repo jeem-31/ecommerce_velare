@@ -356,6 +356,23 @@ function populateProfileForm(profile) {
             image: profile.profile_image ? `url('${profile.profile_image}')` : null
         };
         sessionStorage.setItem('sidebarProfileCache', JSON.stringify(navCache));
+
+        // Also refresh `userProfile` so other account sub-tabs (Addresses,
+        // Purchases, Notifications, etc.) pick up the latest image. Their
+        // inline preload scripts read `userProfile` first, so if we don't
+        // update it here, switching tabs after the server-side image changed
+        // (e.g. uploaded from another device) keeps showing the stale photo.
+        const fullProfileCache = {
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            email: profile.email || null,
+            phone_number: profile.phone_number || null,
+            gender: profile.gender || null,
+            profile_image: profile.profile_image || null
+        };
+        const fullProfileJson = JSON.stringify(fullProfileCache);
+        sessionStorage.setItem('userProfile', fullProfileJson);
+        localStorage.setItem('userProfile', fullProfileJson);
     }
 }
 

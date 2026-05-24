@@ -47,6 +47,8 @@ def myAccount_purchases():
             order_number,
             order_status,
             order_received,
+            seller_id,
+            address_id,
             subtotal,
             shipping_fee,
             discount_amount,
@@ -108,22 +110,91 @@ def myAccount_purchases():
                 for review in all_reviews_response.data:
                     order_id = review['order_id']
                     reviews_by_order[order_id] = reviews_by_order.get(order_id, 0) + 1
-            
+
+            # Fallback: fetch sellers/addresses/vouchers/deliveries directly in
+            # case the nested PostgREST joins didn't resolve on this Supabase
+            # project (happens on Railway when the FK metadata cache is stale
+            # or RLS blocks the nested read). Without this, the purchases page
+            # ends up missing shop_name and shop_logo.
+            seller_ids = set()
+            address_ids = set()
+            voucher_ids = set()
+            for o in orders_response.data:
+                if o.get('seller_id'):
+                    seller_ids.add(o['seller_id'])
+                if o.get('address_id'):
+                    address_ids.add(o['address_id'])
+                if o.get('voucher_id'):
+                    voucher_ids.add(o['voucher_id'])
+
+            sellers_by_id = {}
+            if seller_ids:
+                try:
+                    s_resp = supabase.table('sellers').select(
+                        'seller_id, shop_name, shop_logo'
+                    ).in_('seller_id', list(seller_ids)).execute()
+                    if s_resp.data:
+                        sellers_by_id = {s['seller_id']: s for s in s_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Seller fallback fetch failed: {fb_err}")
+
+            addresses_by_id = {}
+            if address_ids:
+                try:
+                    a_resp = supabase.table('addresses').select(
+                        'address_id, full_address, city, province'
+                    ).in_('address_id', list(address_ids)).execute()
+                    if a_resp.data:
+                        addresses_by_id = {a['address_id']: a for a in a_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Address fallback fetch failed: {fb_err}")
+
+            vouchers_by_id = {}
+            if voucher_ids:
+                try:
+                    v_resp = supabase.table('vouchers').select(
+                        'voucher_id, voucher_code, voucher_name, voucher_type'
+                    ).in_('voucher_id', list(voucher_ids)).execute()
+                    if v_resp.data:
+                        vouchers_by_id = {v['voucher_id']: v for v in v_resp.data}
+                except Exception as fb_err:
+                    print(f"⚠️ Voucher fallback fetch failed: {fb_err}")
+
+            deliveries_by_order = {}
+            try:
+                d_resp = supabase.table('deliveries').select(
+                    'order_id, status'
+                ).in_('order_id', order_ids).execute()
+                if d_resp.data:
+                    deliveries_by_order = {d['order_id']: d for d in d_resp.data}
+            except Exception as fb_err:
+                print(f"⚠️ Delivery fallback fetch failed: {fb_err}")
+
             print(f"📊 Batch fetched: {len(items_by_order)} orders with items, {len(images_by_product)} product images, {len(reviews_by_order)} orders with reviews")
             
             for order in orders_response.data:
-                # Flatten nested data - handle both single objects and arrays
+                # Flatten nested data - handle both single objects and arrays.
+                # If the nested join is empty (Railway/FK-cache issue), fall
+                # back to the dictionaries we just built directly above.
                 seller_data = order.get('sellers', {})
                 seller = seller_data[0] if isinstance(seller_data, list) and seller_data else (seller_data if isinstance(seller_data, dict) else {})
-                
+                if not seller and order.get('seller_id'):
+                    seller = sellers_by_id.get(order['seller_id'], {})
+
                 address_data = order.get('addresses', {})
                 address = address_data[0] if isinstance(address_data, list) and address_data else (address_data if isinstance(address_data, dict) else {})
-                
+                if not address and order.get('address_id'):
+                    address = addresses_by_id.get(order['address_id'], {})
+
                 delivery_data = order.get('deliveries', {})
                 delivery = delivery_data[0] if isinstance(delivery_data, list) and delivery_data else (delivery_data if isinstance(delivery_data, dict) else {})
-                
+                if not delivery:
+                    delivery = deliveries_by_order.get(order['order_id'], {})
+
                 voucher_data = order.get('vouchers', {})
                 voucher = voucher_data[0] if isinstance(voucher_data, list) and voucher_data else (voucher_data if isinstance(voucher_data, dict) else {})
+                if not voucher and order.get('voucher_id'):
+                    voucher = vouchers_by_id.get(order['voucher_id'], {})
                 
                 order_data = {
                     'order_id': order['order_id'],
