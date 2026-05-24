@@ -7,6 +7,12 @@ from datetime import datetime
 # Add the parent directory to the path to import db_config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.supabase_helper import *
+from blueprints.shipping_fee import (
+    calculate_fee,
+    get_address_by_id,
+    get_seller_default_address,
+    DEFAULT_SHIPPING_FEE,
+)
 
 checkout_order_bp = Blueprint('checkout_order', __name__)
 
@@ -173,13 +179,36 @@ def place_order():
             else:
                 next_num = 1
             
+            # Resolve buyer's address once for tier-based shipping fee
+            buyer_address_record = get_address_by_id(supabase, address_id) or {}
+
+            # Compute per-seller tier shipping fees authoritatively on the server.
+            # We do not trust the client-supplied shipping_fee.
+            seller_fee_map = {}
+            for seller_id in seller_items.keys():
+                seller_addr = get_seller_default_address(supabase, seller_id) or {}
+                fee_value, tier = calculate_fee(buyer_address_record, seller_addr)
+                seller_fee_map[seller_id] = {
+                    'fee': Decimal(str(fee_value)),
+                    'tier': tier,
+                }
+
+            total_actual_shipping = sum(
+                entry['fee'] for entry in seller_fee_map.values()
+            ) or Decimal('0')
+
+            # Distribute discount evenly across sellers (existing behaviour)
+            num_sellers = len(seller_items)
+
             # Create orders for each seller
             order_ids = []
-            num_sellers = len(seller_items)
-            
+
             for seller_id, items in seller_items.items():
                 seller_subtotal = sum(Decimal(str(item['price'])) * item['quantity'] for item in items)
-                seller_shipping = shipping_fee / num_sellers
+                seller_actual_shipping = seller_fee_map[seller_id]['fee']
+                # If buyer has free_shipping voucher, the buyer pays nothing for
+                # shipping; the platform absorbs the actual delivery fee.
+                seller_shipping = Decimal('0') if is_free_shipping else seller_actual_shipping
                 seller_discount = discount_amount / num_sellers
                 commission_amount = seller_subtotal * Decimal('0.05')
                 seller_total = seller_subtotal + seller_shipping - seller_discount
@@ -223,8 +252,10 @@ def place_order():
                 address_response = supabase.table('addresses').select('full_address').eq('address_id', address_id).execute()
                 delivery_address = address_response.data[0]['full_address'] if address_response.data else 'N/A'
                 
-                # Calculate delivery fee
-                actual_delivery_fee = Decimal('49.00') / num_sellers if is_free_shipping else shipping_fee / num_sellers
+                # Calculate delivery fee — use the per-seller tier-based fee.
+                # The rider always gets paid the actual delivery fee. When the
+                # buyer used a free_shipping voucher, the platform absorbs it.
+                actual_delivery_fee = seller_actual_shipping
                 
                 # Create delivery record with NULL status (seller needs to click "Prepare Package" first)
                 delivery_data = {

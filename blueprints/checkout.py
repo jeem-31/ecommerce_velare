@@ -5,6 +5,12 @@ import os
 # Add the parent directory to the path to import db_config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.supabase_helper import *
+from blueprints.shipping_fee import (
+    calculate_fee,
+    get_address_by_id,
+    get_seller_default_address,
+    DEFAULT_SHIPPING_FEE,
+)
 
 checkout_bp = Blueprint('checkout', __name__)
 
@@ -518,3 +524,112 @@ def set_default_address():
         import traceback
         print(traceback.format_exc())
         return jsonify({'success': False, 'message': f'Unexpected error: {str(e)}'}), 500
+
+
+@checkout_bp.route('/api/calculate_shipping', methods=['POST'])
+def calculate_shipping_api():
+    """Calculate the shipping fee tier for the current cart based on the
+    buyer's selected address vs each seller's default pickup address.
+
+    Request JSON:
+        {
+            "address_id": 123,
+            "cart_ids": [1, 2, 3]            # OR
+            "seller_ids": [10, 11]
+        }
+
+    Response JSON:
+        {
+            "success": true,
+            "total_shipping_fee": 158.00,
+            "per_seller": [
+                {"seller_id": 10, "tier": 1, "fee": 49.00},
+                {"seller_id": 11, "tier": 3, "fee": 109.00}
+            ]
+        }
+    """
+    if 'user_id' not in session or not session.get('logged_in'):
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    try:
+        data = request.get_json(silent=True) or {}
+        address_id = data.get('address_id')
+        cart_ids = data.get('cart_ids') or []
+        seller_ids = data.get('seller_ids') or []
+
+        if not address_id:
+            return jsonify({'success': False, 'message': 'address_id is required'}), 400
+
+        supabase = get_supabase()
+        if not supabase:
+            return jsonify({'success': False, 'message': 'Database connection failed'}), 500
+
+        # Resolve seller_ids from cart_ids if needed
+        if not seller_ids and cart_ids:
+            try:
+                cart_ids_int = [int(c) for c in cart_ids]
+            except (TypeError, ValueError):
+                return jsonify({'success': False, 'message': 'Invalid cart_ids'}), 400
+
+            cart_resp = supabase.table('cart').select(
+                'cart_id, product_id, products(seller_id)'
+            ).in_('cart_id', cart_ids_int).execute()
+
+            collected = []
+            missing_product_ids = []
+            for row in (cart_resp.data or []):
+                product = row.get('products') or {}
+                sid = product.get('seller_id') if isinstance(product, dict) else None
+                if sid:
+                    collected.append(sid)
+                elif row.get('product_id'):
+                    missing_product_ids.append(row['product_id'])
+
+            # Fallback: nested join occasionally returns empty, look up directly
+            if missing_product_ids:
+                try:
+                    p_resp = supabase.table('products').select(
+                        'product_id, seller_id'
+                    ).in_('product_id', list(set(missing_product_ids))).execute()
+                    for p in (p_resp.data or []):
+                        if p.get('seller_id'):
+                            collected.append(p['seller_id'])
+                except Exception as fb_err:
+                    print(f"⚠️ shipping fallback product lookup failed: {fb_err}")
+
+            seller_ids = list({sid for sid in collected if sid})
+
+        if not seller_ids:
+            return jsonify({
+                'success': True,
+                'total_shipping_fee': DEFAULT_SHIPPING_FEE,
+                'per_seller': [],
+            })
+
+        buyer_address = get_address_by_id(supabase, address_id)
+        if not buyer_address:
+            return jsonify({'success': False, 'message': 'Address not found'}), 404
+
+        per_seller = []
+        total = 0.0
+        for sid in seller_ids:
+            seller_address = get_seller_default_address(supabase, sid)
+            fee, tier = calculate_fee(buyer_address, seller_address or {})
+            per_seller.append({
+                'seller_id': sid,
+                'tier': tier,
+                'fee': round(fee, 2),
+            })
+            total += fee
+
+        return jsonify({
+            'success': True,
+            'total_shipping_fee': round(total, 2),
+            'per_seller': per_seller,
+        })
+
+    except Exception as exc:
+        import traceback
+        print(f"calculate_shipping_api error: {exc}")
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(exc)}), 500
