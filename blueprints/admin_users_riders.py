@@ -18,7 +18,8 @@ def send_account_status_email(recipient_email, first_name, last_name, user_type,
             subject = 'Welcome to Velare - Your Account Has Been Approved!'
         else:
             subject = 'Velare - Account Application Update'
-            
+
+        if status == 'approved':
             html_content = f'''
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
