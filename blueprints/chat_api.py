@@ -66,40 +66,43 @@ def get_conversations():
                     has_active = False
                     has_unconfirmed = False
                     try:
-                        # Pull all orders linked to this buyer + rider via deliveries.
-                        # We join through deliveries to find orders served by this rider.
-                        deliveries_resp = supabase.table('deliveries').select(
-                            'status, order_id'
-                        ).eq('rider_id', conv['rider_id']).eq('buyer_id', buyer_id).execute()
+                        # The deliveries table has rider_id but NOT buyer_id;
+                        # the buyer link lives on the related order. Query the
+                        # buyer's orders first, then check matching deliveries
+                        # that belong to this rider.
+                        orders_resp = supabase.table('orders').select(
+                            'order_id, order_received, order_status'
+                        ).eq('buyer_id', buyer_id).execute()
 
-                        delivery_order_ids = []
-                        active_statuses = {'assigned', 'in_transit', 'pending'}
-                        for d in (deliveries_resp.data or []):
-                            d_status = d.get('status')
-                            if d_status in active_statuses:
-                                has_active = True
-                            if d.get('order_id'):
-                                delivery_order_ids.append(d['order_id'])
+                        order_status_by_id = {}
+                        for o in (orders_resp.data or []):
+                            order_status_by_id[o['order_id']] = o
 
-                        if delivery_order_ids:
-                            orders_resp = supabase.table('orders').select(
-                                'order_id, order_received, order_status'
-                            ).in_('order_id', list(set(delivery_order_ids))).execute()
-                            for o in (orders_resp.data or []):
-                                if o.get('order_status') == 'cancelled':
+                        if order_status_by_id:
+                            deliveries_resp = supabase.table('deliveries').select(
+                                'status, order_id'
+                            ).eq('rider_id', conv['rider_id']).in_(
+                                'order_id', list(order_status_by_id.keys())
+                            ).execute()
+
+                            active_statuses = {'assigned', 'in_transit', 'pending'}
+                            for d in (deliveries_resp.data or []):
+                                d_status = d.get('status')
+                                if d_status in active_statuses:
+                                    has_active = True
+                                related_order = order_status_by_id.get(d.get('order_id'))
+                                if not related_order:
                                     continue
-                                if not o.get('order_received'):
+                                if related_order.get('order_status') == 'cancelled':
+                                    continue
+                                if not related_order.get('order_received'):
                                     has_unconfirmed = True
-                                    break
                     except Exception as lookup_err:
                         print(f"⚠️ rider chat status lookup failed: {lookup_err}")
 
                     # Frontend uses (delivery_status, order_received) to decide
-                    # whether to keep the chat visible/unlocked. Map:
-                    #   has_active OR has_unconfirmed -> chat stays open
-                    #   neither -> chat is "complete" (delivered + received)
+                    # whether to keep the chat visible/unlocked.
                     if has_active or has_unconfirmed:
-                        # Treat as still in flight regardless of any single delivery
                         delivery_status = 'in_transit'
                         order_received = False
                     else:
