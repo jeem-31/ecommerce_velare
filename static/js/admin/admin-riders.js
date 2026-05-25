@@ -174,11 +174,16 @@ function createRiderCard(rider) {
     console.log('Profile Image:', rider.profile_image);
     
     const initials = `${rider.first_name?.[0] || '?'}${rider.last_name?.[0] || '?'}`.toUpperCase();
-    const joinDate = new Date(rider.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const joinDate = rider.created_at
+        ? new Date(rider.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        : 'N/A';
+
+    const fullName = [rider.first_name, rider.last_name].filter(Boolean).join(' ') || 'Unknown User';
+    const email = rider.email || 'N/A';
     
     const statusClass = (rider.status || 'pending').toLowerCase();
     const statusLabel = (rider.status || 'Pending').charAt(0).toUpperCase() + (rider.status || 'pending').slice(1);
@@ -206,7 +211,7 @@ function createRiderCard(rider) {
                             </div>` :
                             `<div class="small-avatar">${initials}</div>`
                         }
-                        <h3 class="product-name">${rider.first_name} ${rider.last_name}</h3>
+                        <h3 class="product-name">${fullName}</h3>
                         <span class="status-badge ${statusClass}">${statusLabel}</span>
                         ${rider.report_count && rider.report_count > 0 ? `
                             <span class="report-count-badge" style="background: ${rider.report_count >= 3 ? '#dc3545' : rider.report_count >= 2 ? '#ff6b6b' : '#ffa500'} !important; color: white !important; padding: 4px 10px !important; border-radius: 2px !important; border: 2px solid ${rider.report_count >= 3 ? '#b02a37' : rider.report_count >= 2 ? '#e85555' : '#e69500'} !important; font-size: 0.75rem !important; font-weight: 600 !important; margin-left: 8px !important;">
@@ -218,7 +223,7 @@ function createRiderCard(rider) {
                     <div class="product-info-grid">
                         <div class="info-item">
                             <label>Email:</label>
-                            <span>${rider.email}</span>
+                            <span>${email}</span>
                         </div>
                         <div class="info-item">
                             <label>Phone:</label>

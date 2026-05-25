@@ -174,12 +174,20 @@ function createBuyerCard(buyer) {
     console.log('Profile Image:', buyer.profile_image);
     
     const initials = `${buyer.first_name?.[0] || '?'}${buyer.last_name?.[0] || '?'}`.toUpperCase();
-    const joinDate = new Date(buyer.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    
+    const joinDate = buyer.created_at
+        ? new Date(buyer.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        : 'N/A';
+
+    const fullName = [buyer.first_name, buyer.last_name].filter(Boolean).join(' ') || 'Unknown User';
+    const email = buyer.email || 'N/A';
+    const buyerPhone = (buyer.addresses && buyer.addresses.length > 0 && buyer.addresses[0].phone_number)
+        ? buyer.addresses[0].phone_number
+        : 'N/A';
+
     const statusClass = (buyer.status || 'pending').toLowerCase();
     const statusLabel = (buyer.status || 'Pending').charAt(0).toUpperCase() + (buyer.status || 'pending').slice(1);
     
@@ -206,7 +214,7 @@ function createBuyerCard(buyer) {
                             </div>` :
                             `<div class="small-avatar">${initials}</div>`
                         }
-                        <h3 class="product-name">${buyer.first_name} ${buyer.last_name}</h3>
+                        <h3 class="product-name">${fullName}</h3>
                         <span class="status-badge ${statusClass}">${statusLabel}</span>
                         ${buyer.report_count && buyer.report_count > 0 ? `
                             <span class="report-count-badge" style="background: ${buyer.report_count >= 3 ? '#dc3545' : buyer.report_count >= 2 ? '#ff6b6b' : '#ffa500'} !important; color: white !important; padding: 4px 10px !important; border-radius: 2px !important; border: 2px solid ${buyer.report_count >= 3 ? '#b02a37' : buyer.report_count >= 2 ? '#e85555' : '#e69500'} !important; font-size: 0.75rem !important; font-weight: 600 !important; margin-left: 8px !important;">
@@ -218,11 +226,11 @@ function createBuyerCard(buyer) {
                     <div class="product-info-grid">
                         <div class="info-item">
                             <label>Email:</label>
-                            <span>${buyer.email}</span>
+                            <span>${email}</span>
                         </div>
                         <div class="info-item">
                             <label>Phone:</label>
-                            <span>${buyer.addresses && buyer.addresses.length > 0 ? buyer.addresses[0].phone_number : 'N/A'}</span>
+                            <span>${buyerPhone}</span>
                         </div>
                         <div class="info-item">
                             <label>Addresses:</label>
@@ -783,8 +791,8 @@ function updateAddressDisplay(selectElement, buyerId) {
         
         // Update phone number if it's different
         const phoneSpan = card.querySelector('.info-item:has(label:contains("Phone:")) span');
-        if (phoneSpan && address.phone_number) {
-            phoneSpan.textContent = address.phone_number;
+        if (phoneSpan) {
+            phoneSpan.textContent = address.phone_number || 'N/A';
         }
     }
 }

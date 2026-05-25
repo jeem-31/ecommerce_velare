@@ -182,11 +182,16 @@ function createSellerCard(seller) {
     console.log('Full seller object:', seller);
     
     const initials = `${seller.first_name?.[0] || '?'}${seller.last_name?.[0] || '?'}`.toUpperCase();
-    const joinDate = new Date(seller.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const joinDate = seller.created_at
+        ? new Date(seller.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        : 'N/A';
+
+    const fullName = [seller.first_name, seller.last_name].filter(Boolean).join(' ') || 'Unknown User';
+    const email = seller.email || 'N/A';
     
     const statusClass = (seller.status || 'pending').toLowerCase();
     const statusLabel = (seller.status || 'Pending').charAt(0).toUpperCase() + (seller.status || 'pending').slice(1);
@@ -214,7 +219,7 @@ function createSellerCard(seller) {
                             </div>` :
                             `<div class="small-avatar">${initials}</div>`
                         }
-                        <h3 class="product-name">${seller.first_name} ${seller.last_name}</h3>
+                        <h3 class="product-name">${fullName}</h3>
                         <span class="status-badge ${statusClass}">${statusLabel}</span>
                         ${seller.report_count && seller.report_count > 0 ? `
                             <span class="report-count-badge" style="background: ${seller.report_count >= 3 ? '#dc3545' : seller.report_count >= 2 ? '#ff6b6b' : '#ffa500'} !important; color: white !important; padding: 4px 10px !important; border-radius: 2px !important; border: 2px solid ${seller.report_count >= 3 ? '#b02a37' : seller.report_count >= 2 ? '#e85555' : '#e69500'} !important; font-size: 0.75rem !important; font-weight: 600 !important; margin-left: 8px !important;">
@@ -230,7 +235,7 @@ function createSellerCard(seller) {
                         </div>
                         <div class="info-item">
                             <label>Email:</label>
-                            <span>${seller.email}</span>
+                            <span>${email}</span>
                         </div>
                         <div class="info-item">
                             <label>Phone:</label>
