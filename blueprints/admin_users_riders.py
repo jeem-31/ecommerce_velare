@@ -9,6 +9,26 @@ from utils.email_service import send_email
 
 admin_users_riders_bp = Blueprint('admin_users_riders', __name__)
 
+
+def _resolve_user_email(supabase, record):
+    """Return the user's email, falling back to a direct lookup if the
+    PostgREST nested users(...) join returned an empty/None object."""
+    if not record:
+        return None
+    user = record.get('users') if isinstance(record, dict) else None
+    if isinstance(user, dict) and user.get('email'):
+        return user['email']
+    user_id = record.get('user_id') if isinstance(record, dict) else None
+    if not user_id:
+        return None
+    try:
+        resp = supabase.table('users').select('email').eq('user_id', user_id).limit(1).execute()
+        if resp.data and resp.data[0].get('email'):
+            return resp.data[0]['email']
+    except Exception as exc:
+        print(f"⚠️ user email backfill failed for user_id {user_id}: {exc}")
+    return None
+
 def send_account_status_email(recipient_email, first_name, last_name, user_type, status):
     """Send account approval or rejection email."""
     try:
@@ -453,8 +473,7 @@ def approve_rider(rider_id):
                 return jsonify({'success': False, 'message': 'Rider not found'}), 404
             
             rider = rider_response.data[0]
-            user = rider.get('users', {})
-            email = user.get('email') if isinstance(user, dict) else None
+            email = _resolve_user_email(supabase, rider)
             
             # Update user status to active
             supabase.table('users').update({'status': 'active'}).eq('user_id', rider['user_id']).execute()
@@ -518,8 +537,7 @@ def reject_rider(rider_id):
                 return jsonify({'success': False, 'message': 'Rider not found'}), 404
             
             rider = rider_response.data[0]
-            user = rider.get('users', {})
-            email = user.get('email') if isinstance(user, dict) else None
+            email = _resolve_user_email(supabase, rider)
             
             # Update user status to rejected
             supabase.table('users').update({'status': 'rejected'}).eq('user_id', rider['user_id']).execute()
@@ -571,7 +589,7 @@ def suspend_rider(rider_id):
                 return jsonify({'success': False, 'message': 'Rider not found'}), 404
             
             rider = rider_response.data[0]
-            user_email = rider.get('users', {}).get('email') if rider.get('users') else None
+            user_email = _resolve_user_email(supabase, rider)
             
             # Update user status to suspended
             supabase.table('users').update({'status': 'suspended'}).eq('user_id', rider['user_id']).execute()
@@ -624,7 +642,7 @@ def ban_rider(rider_id):
                 return jsonify({'success': False, 'message': 'Rider not found'}), 404
             
             rider = rider_response.data[0]
-            user_email = rider.get('users', {}).get('email') if rider.get('users') else None
+            user_email = _resolve_user_email(supabase, rider)
             
             # Update user status to banned
             supabase.table('users').update({'status': 'banned'}).eq('user_id', rider['user_id']).execute()

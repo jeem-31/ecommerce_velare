@@ -9,6 +9,31 @@ from utils.email_service import send_email
 
 admin_users_buyers_bp = Blueprint('admin_users_buyers', __name__)
 
+
+def _resolve_user_email(supabase, record):
+    """Return the user's email for a buyer/seller/rider row.
+
+    PostgREST nested joins (e.g. users(email)) sometimes return None on
+    Railway even when the row exists. This helper tries the nested object
+    first and falls back to a direct lookup by user_id so admin actions can
+    still send notification emails reliably.
+    """
+    if not record:
+        return None
+    user = record.get('users') if isinstance(record, dict) else None
+    if isinstance(user, dict) and user.get('email'):
+        return user['email']
+    user_id = record.get('user_id') if isinstance(record, dict) else None
+    if not user_id:
+        return None
+    try:
+        resp = supabase.table('users').select('email').eq('user_id', user_id).limit(1).execute()
+        if resp.data and resp.data[0].get('email'):
+            return resp.data[0]['email']
+    except Exception as exc:
+        print(f"⚠️ user email backfill failed for user_id {user_id}: {exc}")
+    return None
+
 def send_account_status_email(recipient_email, first_name, last_name, user_type, status):
     """Send account approval or rejection email."""
     try:
@@ -451,8 +476,7 @@ def approve_buyer(buyer_id):
                 return jsonify({'success': False, 'message': 'Buyer not found'}), 404
             
             buyer = buyer_response.data[0]
-            user = buyer.get('users', {})
-            email = user.get('email') if isinstance(user, dict) else None
+            email = _resolve_user_email(supabase, buyer)
             
             # Update user status to active
             supabase.table('users').update({'status': 'active'}).eq('user_id', buyer['user_id']).execute()
@@ -535,8 +559,7 @@ def reject_buyer(buyer_id):
                 return jsonify({'success': False, 'message': 'Buyer not found'}), 404
             
             buyer = buyer_response.data[0]
-            user = buyer.get('users', {})
-            email = user.get('email') if isinstance(user, dict) else None
+            email = _resolve_user_email(supabase, buyer)
             
             # Update user status to rejected
             supabase.table('users').update({'status': 'rejected'}).eq('user_id', buyer['user_id']).execute()
@@ -591,7 +614,7 @@ def suspend_buyer(buyer_id):
                 return jsonify({'success': False, 'message': 'Buyer not found'}), 404
             
             buyer = buyer_response.data[0]
-            user_email = buyer.get('users', {}).get('email') if buyer.get('users') else None
+            user_email = _resolve_user_email(supabase, buyer)
             
             # Update user status to suspended
             supabase.table('users').update({'status': 'suspended'}).eq('user_id', buyer['user_id']).execute()
@@ -644,7 +667,7 @@ def ban_buyer(buyer_id):
                 return jsonify({'success': False, 'message': 'Buyer not found'}), 404
             
             buyer = buyer_response.data[0]
-            user_email = buyer.get('users', {}).get('email') if buyer.get('users') else None
+            user_email = _resolve_user_email(supabase, buyer)
             
             # Update user status to banned
             supabase.table('users').update({'status': 'banned'}).eq('user_id', buyer['user_id']).execute()
