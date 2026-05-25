@@ -48,11 +48,25 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
 
 
 def _default_from() -> str:
-    """Reasonable default sender used when EMAIL_FROM is unset."""
-    # Resend offers a shared sandbox domain for testing without verifying a
-    # custom domain. It only delivers to the account owner's email, but it
-    # avoids blocking development.
-    return _env('EMAIL_FROM') or 'Velare <onboarding@resend.dev>'
+    """Reasonable default sender used when EMAIL_FROM is unset.
+
+    Always returns the address with a "Velare" display name so recipients see
+    the brand instead of the raw mailbox. If EMAIL_FROM is provided as just an
+    email address (no name part), we still wrap it as "Velare <email>".
+    """
+    configured = _env('EMAIL_FROM')
+    if not configured:
+        # Resend offers a shared sandbox domain for testing without verifying a
+        # custom domain. It only delivers to the account owner's email, but it
+        # avoids blocking development.
+        return 'Velare <onboarding@resend.dev>'
+
+    # If the user supplied "Name <email>", honor it as-is.
+    if '<' in configured and configured.endswith('>'):
+        return configured
+
+    # Plain email address - wrap with the Velare display name.
+    return f'Velare <{configured.strip()}>'
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +205,11 @@ def _send_via_smtp(to: str, subject: str, html: str, text: str) -> bool:
         print("❌ [SMTP] No credentials configured")
         return False
 
-    sender_value = _env('EMAIL_FROM') or username
+    sender_value = _default_from()
+    if not _env('EMAIL_FROM'):
+        # SMTP normally uses the SMTP username as the From by default; wrap it
+        # so recipients still see the Velare brand.
+        sender_value = f'Velare <{username}>'
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
