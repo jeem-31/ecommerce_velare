@@ -3,10 +3,11 @@
 Railway free/hobby tier blocks outbound SMTP (ports 25/465/587). This module
 prefers HTTP-based email APIs that go through ports 80/443:
 
-    1. Resend (preferred)        - https://resend.com   3,000 free emails/month
-    2. Brevo / Sendinblue        - https://brevo.com    300 free emails/day
-    3. SendGrid                  - https://sendgrid.com 100 free emails/day
-    4. SMTP (Gmail) fallback     - works locally, blocked on Railway
+    1. Resend (preferred)        - https://resend.com      3,000 free emails/month
+    2. Brevo / Sendinblue        - https://brevo.com       300 free emails/day
+    3. MailerSend                - https://mailersend.com  3,000 free emails/month
+    4. SendGrid                  - https://sendgrid.com    100 free emails/day
+    5. SMTP (Gmail) fallback     - works locally, blocked on Railway
 
 Configure via environment variables. The first provider whose API key is set
 will be used. SMTP is used only when no HTTP provider is configured.
@@ -14,6 +15,7 @@ will be used. SMTP is used only when no HTTP provider is configured.
 Required env vars (one of):
     RESEND_API_KEY          re_xxxxxxxxxxxx
     BREVO_API_KEY           xkeysib-xxxxxxxxxxxx
+    MAILERSEND_API_KEY      mlsn.xxxxxxxxxxxx
     SENDGRID_API_KEY        SG.xxxxxxxxxxxx
 
 Optional:
@@ -136,6 +138,47 @@ def _send_via_brevo(to: str, subject: str, html: str, text: str) -> bool:
         return False
 
 
+def _send_via_mailersend(to: str, subject: str, html: str, text: str) -> bool:
+    api_key = _env('MAILERSEND_API_KEY')
+    if not api_key:
+        return False
+
+    sender_value = _default_from()
+    sender_name, sender_email = _split_address(sender_value)
+
+    payload = {
+        'from': {'email': sender_email, 'name': sender_name or 'Velare'},
+        'to': [{'email': to}],
+        'subject': subject,
+        'html': html,
+        'text': text or ' ',
+    }
+    reply_to = _env('EMAIL_REPLY_TO')
+    if reply_to:
+        rt_name, rt_email = _split_address(reply_to)
+        payload['reply_to'] = {'email': rt_email, 'name': rt_name}
+
+    try:
+        response = requests.post(
+            'https://api.mailersend.com/v1/email',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            json=payload,
+            timeout=15,
+        )
+        if response.status_code in (200, 201, 202):
+            print(f"✅ [MailerSend] Sent email to {to}")
+            return True
+        print(f"❌ [MailerSend] {response.status_code} {response.text}")
+        return False
+    except requests.RequestException as exc:
+        print(f"❌ [MailerSend] Request failed: {exc}")
+        return False
+
+
 def _send_via_sendgrid(to: str, subject: str, html: str, text: str) -> bool:
     api_key = _env('SENDGRID_API_KEY')
     if not api_key:
@@ -238,7 +281,7 @@ def send_email(to: str, subject: str, html: str, text: str = '') -> bool:
     text_fallback = text or _strip_html(html)
 
     # Try HTTP providers first (work on Railway)
-    for sender in (_send_via_resend, _send_via_brevo, _send_via_sendgrid):
+    for sender in (_send_via_resend, _send_via_brevo, _send_via_mailersend, _send_via_sendgrid):
         if sender(to, subject, html, text_fallback):
             return True
 
