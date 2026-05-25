@@ -456,6 +456,7 @@
         } else {
             avatar = generateDefaultAvatar(conv.contact_name);
         }
+        const fallbackAvatar = generateDefaultAvatar(conv.contact_name);
         const time = formatTime(conv.last_message_time);
         const unreadBadge = conv.unread_count > 0 ? 
             `<span class="unread-badge" style="background: #bf9f4a; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">${conv.unread_count}</span>` : '';
@@ -467,7 +468,7 @@
             <div class="chat-contact" data-conversation-id="${conv.conversation_id}" 
                  data-contact-id="${conv.contact_id}" data-contact-type="${conv.contact_type}">
                 <div class="contact-avatar">
-                    <img src="${avatar}" alt="${conv.contact_name}">
+                    <img src="${avatar}" alt="${conv.contact_name}" onerror="this.onerror=null; this.src='${fallbackAvatar}';">
                 </div>
                 <div class="contact-info">
                     <div class="contact-name">
@@ -789,13 +790,14 @@
         
         const inputDisabled = chatLocked ? 'disabled' : '';
         const inputPlaceholder = chatLocked ? 'Chat has ended' : 'Type a message...';
+        const headerFallbackAvatar = generateDefaultAvatar(contactName);
         
         let html = `
             <div class="chat-conversation active">
                 <div class="conversation-header">
                     <div class="conversation-contact">
                         <div class="conversation-avatar">
-                            <img src="${contactAvatar}" alt="${contactName}">
+                            <img src="${contactAvatar}" alt="${contactName}" onerror="this.onerror=null; this.src='${headerFallbackAvatar}';">
                         </div>
                         <div>
                             <div class="conversation-name">${escapeHtml(contactName)}</div>
