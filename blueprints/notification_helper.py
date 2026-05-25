@@ -370,26 +370,15 @@ def create_device_login_notification(user_id, device_info, login_time):
 
 
 def send_device_login_email(recipient_email, device_info, login_time, user_type='seller'):
-    """Send new device login notification email to seller or rider"""
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    
+    """Send new device login notification email to seller or rider."""
+    from utils.email_service import send_email
+
     try:
-        sender_email = 'parokyanigahi21@gmail.com'
-        sender_password = 'ahzyzotndedbxeco'
-        
         print(f"📧 Sending device login email to: {recipient_email}")
         
         # Customize message based on user type
         account_type = "seller" if user_type == "seller" else "rider"
         account_label = "Seller" if user_type == "seller" else "Rider"
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = '🔐 New Device Login Detected - Velare'
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
         
         # Plain text version
         text_content = f'''
@@ -514,23 +503,19 @@ Velare Team
 </body>
 </html>
         '''
-        
-        # Attach both versions
-        text_part = MIMEText(text_content, 'plain')
-        html_part = MIMEText(html_content, 'html')
-        msg.attach(text_part)
-        msg.attach(html_part)
-        
-        # Send email
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.send_message(msg)
-        server.quit()
-        
-        print(f"✅ Device login email sent successfully to {recipient_email}")
-        return True
-        
+
+        success = send_email(
+            to=recipient_email,
+            subject='🔐 New Device Login Detected - Velare',
+            html=html_content,
+            text=text_content,
+        )
+        if success:
+            print(f"✅ Device login email sent successfully to {recipient_email}")
+        else:
+            print(f"❌ Failed to send device login email to {recipient_email}")
+        return success
+
     except Exception as e:
         print(f"❌ Error sending device login email: {e}")
         return False

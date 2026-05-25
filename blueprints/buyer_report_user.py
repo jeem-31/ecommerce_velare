@@ -15,9 +15,7 @@ from database.supabase_helper import (
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from utils.email_service import send_email
 
 buyer_report_user_bp = Blueprint('buyer_report_user', __name__)
 
@@ -28,18 +26,9 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def send_report_notification_email(recipient_email, first_name, last_name, user_type, category, report_count):
-    """Send email notification to reported user"""
+    """Send email notification to reported user."""
     try:
-        sender_email = 'parokyanigahi21@gmail.com'
-        sender_password = 'ahzyzotndedbxeco'
-        
         print(f"Sending report notification email to: {recipient_email}")
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = f'Veláre - Report Notification'
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
         
         # Category labels
         category_labels = {
@@ -116,24 +105,18 @@ def send_report_notification_email(recipient_email, first_name, last_name, user_
         </body>
         </html>
         '''
-        
-        # Attach HTML
-        html_part = MIMEText(html, 'html')
-        msg.attach(html_part)
-        
-        # Send email using SMTP
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.send_message(msg)
-        server.quit()
-        
-        print(f"✅ Report notification email sent successfully to {recipient_email}")
-        return True
-        
-    except smtplib.SMTPException as e:
-        print(f"❌ SMTP Error sending report notification email: {str(e)}")
-        return False
+
+        success = send_email(
+            to=recipient_email,
+            subject='Veláre - Report Notification',
+            html=html,
+        )
+        if success:
+            print(f"✅ Report notification email sent successfully to {recipient_email}")
+        else:
+            print(f"❌ Failed to send report notification email to {recipient_email}")
+        return success
+
     except Exception as e:
         print(f"❌ Error sending report notification email: {str(e)}")
         return False

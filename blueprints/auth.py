@@ -6,46 +6,36 @@ import re
 import secrets
 import string
 from datetime import datetime, timedelta
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 # Add the parent directory to the path to import db_config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_config import get_db_connection, close_db_connection, get_supabase_client
 from utils.file_manager import save_user_document, allowed_file as check_allowed_file
 from utils.password_utils import hash_password, verify_password, needs_upgrade
+from utils.email_service import send_email
 
 auth_bp = Blueprint('auth', __name__)
 
 def init_mail(app):
-    """Initialize mail configuration (using built-in SMTP, no Flask-Mail needed)"""
-    # Store mail config in app config for reference if needed
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
+    """Initialize mail configuration (kept for reference; emails are routed
+    through utils.email_service which prefers HTTP APIs that work on Railway).
+    """
+    # SMTP fallback is read from environment variables; we just expose the
+    # values on app.config for any code that still inspects them.
+    app.config['MAIL_SERVER'] = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.environ.get('SMTP_PORT', '587'))
     app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'parokyanigahi21@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'ahzyzotndedbxeco'  # App password without spaces
-    app.config['MAIL_DEFAULT_SENDER'] = 'parokyanigahi21@gmail.com'
+    app.config['MAIL_USERNAME'] = os.environ.get('SMTP_USERNAME', '')
+    app.config['MAIL_PASSWORD'] = os.environ.get('SMTP_PASSWORD', '')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('EMAIL_FROM', '')
     app.config['MAIL_USE_SSL'] = False
-    return None  # No Flask-Mail object needed
+    return None
 
 def send_reset_email(recipient_email, reset_code):
-    """Send password reset email using SMTP directly"""
+    """Send password reset email via the shared email service."""
     try:
-        sender_email = 'parokyanigahi21@gmail.com'
-        sender_password = 'ahzyzotndedbxeco'  # Remove spaces from app password
-        
-        print(f"Attempting to send email to: {recipient_email}")
-        print(f"Reset code: {reset_code}")
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Velare - Password Reset Code'
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
-        
-        # HTML content
+        print(f"Attempting to send password reset email to: {recipient_email}")
+
         html_content = f'''
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -64,74 +54,27 @@ def send_reset_email(recipient_email, reset_code):
             </body>
         </html>
         '''
-        
-        # Plain text version as fallback
-        text_content = f'''
-        Password Reset Request
-        
-        You requested to reset your password for your Velare account.
-        
-        Your password reset code is: {reset_code}
-        
-        This code will expire in 15 minutes.
-        
-        If you didn't request this, please ignore this email.
-        '''
-        
-        # Attach both plain text and HTML
-        text_part = MIMEText(text_content, 'plain')
-        html_part = MIMEText(html_content, 'html')
-        msg.attach(text_part)
-        msg.attach(html_part)
-        
-        # Send email using SMTP with detailed error handling
-        print("Connecting to Gmail SMTP server...")
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        server.set_debuglevel(1)  # Enable debug output
-        
-        print("Starting TLS...")
-        server.starttls()
-        
-        print("Logging in...")
-        server.login(sender_email, sender_password)
-        
-        print("Sending message...")
-        server.send_message(msg)
-        
-        print("Closing connection...")
-        server.quit()
-        
-        print("Email sent successfully!")
-        return True
-        
-    except smtplib.SMTPAuthenticationError as e:
-        print("\n" + "="*60)
-        print("❌ GMAIL AUTHENTICATION FAILED!")
-        print("="*60)
-        print(f"Error: {str(e)}")
-        print("\n🔧 SOLUTION:")
-        print("1. Go to: https://myaccount.google.com/security")
-        print("2. Enable '2-Step Verification'")
-        print("3. Go to: https://myaccount.google.com/apppasswords")
-        print("4. Create App Password for 'Mail' app")
-        print("5. Copy the 16-character password (remove spaces)")
-        print("6. Update line 40 in auth.py with new password")
-        print("="*60 + "\n")
-        return False
-    except smtplib.SMTPException as e:
-        print("\n" + "="*60)
-        print("❌ SMTP ERROR!")
-        print("="*60)
-        print(f"Error: {str(e)}")
-        print("="*60 + "\n")
-        return False
+
+        text_content = (
+            "Password Reset Request\n\n"
+            "You requested to reset your password for your Velare account.\n\n"
+            f"Your password reset code is: {reset_code}\n\n"
+            "This code will expire in 15 minutes.\n\n"
+            "If you didn't request this, please ignore this email.\n"
+        )
+
+        return send_email(
+            to=recipient_email,
+            subject='Velare - Password Reset Code',
+            html=html_content,
+            text=text_content,
+        )
     except Exception as e:
         print("\n" + "="*60)
         print("❌ EMAIL SENDING ERROR!")
         print("="*60)
         print(f"Error Type: {type(e).__name__}")
         print(f"Error Message: {str(e)}")
-        print("\n📋 Full Error Details:")
         import traceback
         traceback.print_exc()
         print("="*60 + "\n")

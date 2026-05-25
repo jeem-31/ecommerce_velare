@@ -1,25 +1,20 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database.db_config import get_supabase_client
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from utils.email_service import send_email
 
 admin_user_reports_bp = Blueprint('admin_user_reports', __name__)
 
 def send_suspension_email(recipient_email, first_name, last_name, user_type, action='suspend', duration_text='', reason='Violation of terms of service'):
-    """Send account suspension or ban email using Gmail SMTP"""
+    """Send account suspension or ban email."""
     try:
-        sender_email = 'parokyanigahi21@gmail.com'
-        sender_password = 'ahzyzotndedbxeco'
-        
         print(f"📧 Sending {action} email to: {recipient_email}")
-        
-        # Create message
-        msg = MIMEMultipart('alternative')
-        
+
         if action == 'ban':
-            msg['Subject'] = '🚫 Velare - Account Permanently Banned'
-            
+            subject = '🚫 Velare - Account Permanently Banned'
+        else:
+            subject = '⛔ Velare - Account Suspended'
+
+        if action == 'ban':
             html_content = f'''
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -62,8 +57,6 @@ def send_suspension_email(recipient_email, first_name, last_name, user_type, act
             '''
             
         else:  # suspend
-            msg['Subject'] = '⛔ Velare - Account Suspended'
-            
             html_content = f'''
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -114,28 +107,18 @@ def send_suspension_email(recipient_email, first_name, last_name, user_type, act
             If you have any questions, please contact our support team.
             '''
         
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
-        
-        # Attach both plain text and HTML
-        text_part = MIMEText(text_content, 'plain')
-        html_part = MIMEText(html_content, 'html')
-        msg.attach(text_part)
-        msg.attach(html_part)
-        
-        # Send email using SMTP
-        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.send_message(msg)
-        server.quit()
-        
-        print(f"✅ {action.capitalize()} email sent successfully to {recipient_email}")
-        return True
-        
-    except smtplib.SMTPException as e:
-        print(f"❌ SMTP Error sending {action} email: {str(e)}")
-        return False
+        success = send_email(
+            to=recipient_email,
+            subject=subject,
+            html=html_content,
+            text=text_content,
+        )
+        if success:
+            print(f"✅ {action.capitalize()} email sent successfully to {recipient_email}")
+        else:
+            print(f"❌ Failed to send {action} email to {recipient_email}")
+        return success
+
     except Exception as e:
         print(f"❌ Error sending {action} email: {str(e)}")
         return False
