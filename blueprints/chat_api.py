@@ -54,31 +54,65 @@ def get_conversations():
                     else:
                         continue
                 
-                # Get delivery status and order confirmation if delivery_id exists.
-                # Buyer-rider chat must remain visible until the buyer has
-                # confirmed receipt of the order (order_received=True), even if
-                # the rider has marked the delivery as 'delivered'.
+                # For rider conversations, look at ALL deliveries between this
+                # buyer and rider (not just the one stored on the conversation
+                # row, which may be stale). If ANY delivery is still active
+                # (in_transit, assigned, etc.) OR delivered-but-not-yet-confirmed
+                # by the buyer, treat the chat as ongoing.
                 delivery_status = None
                 order_received = None
-                order_id_from_delivery = None
-                if conv.get('delivery_id'):
-                    delivery_response = supabase.table('deliveries').select(
-                        'status, order_id'
-                    ).eq('delivery_id', conv['delivery_id']).execute()
-                    if delivery_response.data:
-                        delivery_row = delivery_response.data[0]
-                        delivery_status = delivery_row.get('status')
-                        order_id_from_delivery = delivery_row.get('order_id')
 
-                if order_id_from_delivery:
+                if contact_type == 'rider':
+                    has_active = False
+                    has_unconfirmed = False
                     try:
-                        order_resp = supabase.table('orders').select(
-                            'order_received, order_status'
-                        ).eq('order_id', order_id_from_delivery).limit(1).execute()
-                        if order_resp.data:
-                            order_received = bool(order_resp.data[0].get('order_received'))
-                    except Exception as order_lookup_err:
-                        print(f"⚠️ order lookup failed for delivery {conv.get('delivery_id')}: {order_lookup_err}")
+                        # Pull all orders linked to this buyer + rider via deliveries.
+                        # We join through deliveries to find orders served by this rider.
+                        deliveries_resp = supabase.table('deliveries').select(
+                            'status, order_id'
+                        ).eq('rider_id', conv['rider_id']).eq('buyer_id', buyer_id).execute()
+
+                        delivery_order_ids = []
+                        active_statuses = {'assigned', 'in_transit', 'pending'}
+                        for d in (deliveries_resp.data or []):
+                            d_status = d.get('status')
+                            if d_status in active_statuses:
+                                has_active = True
+                            if d.get('order_id'):
+                                delivery_order_ids.append(d['order_id'])
+
+                        if delivery_order_ids:
+                            orders_resp = supabase.table('orders').select(
+                                'order_id, order_received, order_status'
+                            ).in_('order_id', list(set(delivery_order_ids))).execute()
+                            for o in (orders_resp.data or []):
+                                if o.get('order_status') == 'cancelled':
+                                    continue
+                                if not o.get('order_received'):
+                                    has_unconfirmed = True
+                                    break
+                    except Exception as lookup_err:
+                        print(f"⚠️ rider chat status lookup failed: {lookup_err}")
+
+                    # Frontend uses (delivery_status, order_received) to decide
+                    # whether to keep the chat visible/unlocked. Map:
+                    #   has_active OR has_unconfirmed -> chat stays open
+                    #   neither -> chat is "complete" (delivered + received)
+                    if has_active or has_unconfirmed:
+                        # Treat as still in flight regardless of any single delivery
+                        delivery_status = 'in_transit'
+                        order_received = False
+                    else:
+                        delivery_status = 'delivered'
+                        order_received = True
+                else:
+                    # Non-rider conversations don't gate visibility on delivery
+                    if conv.get('delivery_id'):
+                        delivery_response = supabase.table('deliveries').select(
+                            'status'
+                        ).eq('delivery_id', conv['delivery_id']).execute()
+                        if delivery_response.data:
+                            delivery_status = delivery_response.data[0].get('status')
                 
                 conversations.append({
                     'conversation_id': conv['conversation_id'],
