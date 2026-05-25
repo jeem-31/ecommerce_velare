@@ -220,7 +220,7 @@
                 </div>
                 <div class="product-summary-right">
                   <div class="quantity-label">Quantity: {{ item.quantity }}</div>
-                  <div class="product-summary-price">�,�{{ "%.2f"|format(item.price) }}</div>
+                  <div class="product-summary-price">₱{{ "%.2f"|format(item.price) }}</div>
                 </div>
               </div>
               {% endfor %}
@@ -234,11 +234,11 @@
               <div class="order-summary-content">
                 <div class="order-summary-row">
                   <span class="order-summary-label">Subtotal:</span>
-                  <span class="order-summary-value" id="orderSubtotal">�,�0.00</span>
+                  <span class="order-summary-value" id="orderSubtotal">₱0.00</span>
                 </div>
                 <div class="order-summary-row">
                   <span class="order-summary-label">Shipping Fee:</span>
-                  <span class="order-summary-value" id="orderShipping">�,�49.00</span>
+                  <span class="order-summary-value" id="orderShipping">₱49.00</span>
                 </div>
                 <div class="order-summary-row" id="shippingTierRow" style="display:none; margin-top:-8px;">
                   <span class="order-summary-label" style="font-size:11px; color:#666; font-weight:400;" id="shippingTierNote"></span>
@@ -246,12 +246,12 @@
                 </div>
                 <div class="order-summary-row" id="discountRow" style="display: none;">
                   <span class="order-summary-label">Discount:</span>
-                  <span class="order-summary-value discount-value" id="orderDiscount">-�,�0.00</span>
+                  <span class="order-summary-value discount-value" id="orderDiscount">-₱0.00</span>
                 </div>
 
                 <div class="order-summary-row total-row">
                   <span class="order-summary-label">Total:</span>
-                  <span class="order-summary-value" id="orderTotal">�,�0.00</span>
+                  <span class="order-summary-value" id="orderTotal">₱0.00</span>
                 </div>
               </div>
             </div>

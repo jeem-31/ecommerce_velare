@@ -283,7 +283,7 @@
                         <div class="product-info">
                             <h3 class="product-name">{{ product.product_name }}</h3>
                             <p class="product-material" style="white-space: pre-wrap;"><strong>Materials:</strong> {{ product.materials or 'Premium Materials' }}</p>
-                            <p class="product-price">�,�{{ "{:,.2f}".format(product.price) }}</p>
+                            <p class="product-price">₱{{ "{:,.2f}".format(product.price) }}</p>
                             {% if product.rating > 0 %}
                                 <p style="font-size: 0.85rem; color: #bf9f4a; margin-top: 5px;">⭐ {{ "%.1f"|format(product.rating) }} ({{ product.total_reviews }} reviews)</p>
                             {% endif %}

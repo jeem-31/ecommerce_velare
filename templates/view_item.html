@@ -170,7 +170,7 @@
           <i class="bi bi-star{% if is_favorite %}-fill{% endif %} favorite-icon"></i>
         </button>
       </div>
-      <div class="product-price-placeholder">�,� {{ "{:,.2f}".format(product.price) }}</div>
+      <div class="product-price-placeholder">₱ {{ "{:,.2f}".format(product.price) }}</div>
       <div class="product-materials" style="white-space: pre-wrap;"><strong>Materials:</strong> {{ product.materials or 'Not specified' }}</div>
       <div class="product-color-size-row">
         {% if variants %}

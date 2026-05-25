@@ -333,6 +333,26 @@ def get_riders():
             riders = riders_response.data if riders_response.data else []
             print(f"✅ Found {len(riders)} riders")
             
+            # Backfill users data when nested join returns empty/null
+            user_ids_needing_lookup = []
+            for rider in riders:
+                user = rider.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    if rider.get('user_id'):
+                        user_ids_needing_lookup.append(rider['user_id'])
+            
+            users_by_id = {}
+            if user_ids_needing_lookup:
+                try:
+                    users_resp = supabase.table('users').select(
+                        'user_id, email, status, created_at'
+                    ).in_('user_id', list(set(user_ids_needing_lookup))).execute()
+                    for u in (users_resp.data or []):
+                        users_by_id[u['user_id']] = u
+                    print(f"🔄 Backfilled {len(users_by_id)} user rows for riders")
+                except Exception as bf_err:
+                    print(f"⚠️ Rider user backfill failed: {bf_err}")
+            
             # Get rider IDs for address lookup
             rider_ids = [r['rider_id'] for r in riders]
             
@@ -348,12 +368,20 @@ def get_riders():
             # Flatten nested user data and add addresses, apply search filter
             filtered_riders = []
             for rider in riders:
-                user = rider.get('users', {})
+                user = rider.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    user = users_by_id.get(rider.get('user_id')) or {}
+                
+                # Apply status filter post-backfill (in case nested join was missing)
+                if status_filter != 'all' and user.get('status') != status_filter:
+                    continue
+                
                 address = addresses_dict.get(rider['rider_id'], {})
                 
                 # Flatten data
                 rider_data = {
                     'account_id': rider['rider_id'],
+                    'user_id': rider.get('user_id'),
                     'user_type': 'rider',
                     'first_name': rider['first_name'],
                     'last_name': rider['last_name'],
@@ -365,9 +393,9 @@ def get_riders():
                     'orcr_file_path': rider.get('orcr_file_path'),
                     'driver_license_file_path': rider.get('driver_license_file_path'),
                     'report_count': rider.get('report_count', 0),
-                    'email': user.get('email') if isinstance(user, dict) else None,
-                    'status': user.get('status') if isinstance(user, dict) else None,
-                    'created_at': user.get('created_at') if isinstance(user, dict) else None,
+                    'email': user.get('email'),
+                    'status': user.get('status'),
+                    'created_at': user.get('created_at'),
                     'phone_number': address.get('phone_number'),
                     'full_address': address.get('full_address'),
                     'region': address.get('region'),

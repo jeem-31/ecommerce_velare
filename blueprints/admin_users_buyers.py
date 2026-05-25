@@ -334,10 +334,38 @@ def get_buyers():
             buyers = buyers_response.data if buyers_response.data else []
             print(f"✅ Found {len(buyers)} buyers")
             
+            # Backfill users data when nested join returns empty/null
+            # (PostgREST sometimes returns the nested object as None on Railway/production
+            # even though the row exists, so we explicitly look up missing user rows.)
+            user_ids_needing_lookup = []
+            for buyer in buyers:
+                user = buyer.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    if buyer.get('user_id'):
+                        user_ids_needing_lookup.append(buyer['user_id'])
+            
+            users_by_id = {}
+            if user_ids_needing_lookup:
+                try:
+                    users_resp = supabase.table('users').select(
+                        'user_id, email, status, created_at'
+                    ).in_('user_id', list(set(user_ids_needing_lookup))).execute()
+                    for u in (users_resp.data or []):
+                        users_by_id[u['user_id']] = u
+                    print(f"🔄 Backfilled {len(users_by_id)} user rows for buyers")
+                except Exception as bf_err:
+                    print(f"⚠️ Buyer user backfill failed: {bf_err}")
+            
             # Flatten nested user data and apply search filter
             filtered_buyers = []
             for buyer in buyers:
-                user = buyer.get('users', {})
+                user = buyer.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    user = users_by_id.get(buyer.get('user_id')) or {}
+                
+                # Apply status filter post-backfill (in case nested join was missing)
+                if status_filter != 'all' and user.get('status') != status_filter:
+                    continue
                 
                 # Flatten data
                 buyer_data = {
@@ -350,16 +378,16 @@ def get_buyers():
                     'id_file_path': buyer.get('id_file_path'),
                     'profile_image': buyer.get('profile_image'),
                     'report_count': buyer.get('report_count', 0),
-                    'email': user.get('email') if isinstance(user, dict) else None,
-                    'status': user.get('status') if isinstance(user, dict) else None,
-                    'created_at': user.get('created_at') if isinstance(user, dict) else None
+                    'email': user.get('email'),
+                    'status': user.get('status'),
+                    'created_at': user.get('created_at')
                 }
                 
                 # Apply search filter in Python
                 if search_query:
                     search_lower = search_query.lower()
-                    if (search_lower in buyer_data['first_name'].lower() or
-                        search_lower in buyer_data['last_name'].lower() or
+                    if (search_lower in (buyer_data['first_name'] or '').lower() or
+                        search_lower in (buyer_data['last_name'] or '').lower() or
                         search_lower in (buyer_data['email'] or '').lower()):
                         filtered_buyers.append(buyer_data)
                 else:

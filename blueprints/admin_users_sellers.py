@@ -331,6 +331,26 @@ def get_sellers():
             sellers = sellers_response.data if sellers_response.data else []
             print(f"✅ Found {len(sellers)} sellers")
             
+            # Backfill users data when nested join returns empty/null
+            user_ids_needing_lookup = []
+            for seller in sellers:
+                user = seller.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    if seller.get('user_id'):
+                        user_ids_needing_lookup.append(seller['user_id'])
+            
+            users_by_id = {}
+            if user_ids_needing_lookup:
+                try:
+                    users_resp = supabase.table('users').select(
+                        'user_id, email, status, created_at'
+                    ).in_('user_id', list(set(user_ids_needing_lookup))).execute()
+                    for u in (users_resp.data or []):
+                        users_by_id[u['user_id']] = u
+                    print(f"🔄 Backfilled {len(users_by_id)} user rows for sellers")
+                except Exception as bf_err:
+                    print(f"⚠️ Seller user backfill failed: {bf_err}")
+            
             # Get seller IDs for address lookup
             seller_ids = [s['seller_id'] for s in sellers]
             
@@ -346,7 +366,14 @@ def get_sellers():
             # Flatten nested user data and add addresses, apply search filter
             filtered_sellers = []
             for seller in sellers:
-                user = seller.get('users', {})
+                user = seller.get('users')
+                if not isinstance(user, dict) or not user.get('email'):
+                    user = users_by_id.get(seller.get('user_id')) or {}
+                
+                # Apply status filter post-backfill (in case nested join was missing)
+                if status_filter != 'all' and user.get('status') != status_filter:
+                    continue
+                
                 address = addresses_dict.get(seller['seller_id'], {})
                 
                 # Flatten data
@@ -362,9 +389,9 @@ def get_sellers():
                     'business_permit_file_path': seller.get('business_permit_file_path'),
                     'shop_logo': seller.get('shop_logo'),
                     'report_count': seller.get('report_count', 0),
-                    'email': user.get('email') if isinstance(user, dict) else None,
-                    'status': user.get('status') if isinstance(user, dict) else None,
-                    'created_at': user.get('created_at') if isinstance(user, dict) else None,
+                    'email': user.get('email'),
+                    'status': user.get('status'),
+                    'created_at': user.get('created_at'),
                     'phone_number': address.get('phone_number'),
                     'full_address': address.get('full_address'),
                     'region': address.get('region'),

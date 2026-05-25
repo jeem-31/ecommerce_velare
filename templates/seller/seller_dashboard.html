@@ -149,7 +149,7 @@
 														<div class="product-main-item">
 															<span class="product-name">{{ order.order_items[0].product_name }}</span>
 															{% if order.order_items[0].variant_color or order.order_items[0].variant_size %}
-															<span class="item-variant">{{ order.order_items[0].variant_color }}{% if order.order_items[0].variant_color and order.order_items[0].variant_size %} �?� {% endif %}{{ order.order_items[0].variant_size }}</span>
+															<span class="item-variant">{{ order.order_items[0].variant_color }}{% if order.order_items[0].variant_color and order.order_items[0].variant_size %} • {% endif %}{{ order.order_items[0].variant_size }}</span>
 															{% endif %}
 															<span class="item-qty-inline">Qty: {{ order.order_items[0].quantity }}</span>
 															<button class="product-dropdown-toggle" onclick="toggleDropdown('dropdown-{{ order.order_id }}')">
@@ -174,7 +174,7 @@
 																<div class="item-details">
 																	<div class="item-name">{{ item.product_name }}</div>
 																	{% if item.variant_color or item.variant_size %}
-																	<div class="item-variant">{{ item.variant_color }}{% if item.variant_color and item.variant_size %} �?� {% endif %}{{ item.variant_size }}</div>
+																	<div class="item-variant">{{ item.variant_color }}{% if item.variant_color and item.variant_size %} • {% endif %}{{ item.variant_size }}</div>
 																	{% endif %}
 																</div>
 																<div class="item-qty">Qty: {{ item.quantity }}</div>
@@ -187,7 +187,7 @@
 													<div class="product-single">
 														<span class="product-name">{{ order.order_items[0].product_name }}</span>
 														{% if order.order_items[0].variant_color or order.order_items[0].variant_size %}
-														<div class="item-variant-inline">{{ order.order_items[0].variant_color }}{% if order.order_items[0].variant_color and order.order_items[0].variant_size %} �?� {% endif %}{{ order.order_items[0].variant_size }}</div>
+														<div class="item-variant-inline">{{ order.order_items[0].variant_color }}{% if order.order_items[0].variant_color and order.order_items[0].variant_size %} • {% endif %}{{ order.order_items[0].variant_size }}</div>
 														{% endif %}
 														<div class="item-qty-inline">Qty: {{ order.order_items[0].quantity }}</div>
 													</div>
@@ -195,8 +195,8 @@
 											</div>
 										</td>
 										<td>{{ order.buyer_name }}</td>
-										<td>{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '�?"' }}</td>
-										<td>�,�{{ "{:,.2f}".format(order.subtotal) }}</td>
+										<td>{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else 'N/A' }}</td>
+										<td>₱{{ "{:,.2f}".format(order.subtotal) }}</td>
 										<td>
 											<span class="status-badge status-{{ order.order_status }}">
 												{% if order.order_status == 'pending' %}
@@ -255,15 +255,15 @@
 													{% if item.variant_color or item.variant_size %}
 													<span class="product-variant">({{ item.variant_color }}{% if item.variant_color and item.variant_size %}, {% endif %}{{ item.variant_size }})</span>
 													{% endif %}
-													<span class="product-qty">�- {{ item.quantity }}</span>
+													<span class="product-qty">× {{ item.quantity }}</span>
 												</div>
 												{% endfor %}
 											</div>
 										</td>
-										<td>{{ order.order_received_date.strftime('%b %d, %Y') if order.order_received_date else '�?"' }}</td>
+										<td>{{ order.order_received_date.strftime('%b %d, %Y') if order.order_received_date else 'N/A' }}</td>
 										<td>{{ order.buyer_name }}</td>
-										<td class="price-positive">+�,�{{ "{:,.2f}".format(order.order_total) }}</td>
-										<td class="commission-negative">-�,�{{ "{:,.2f}".format(order.commission_amount) }}</td>
+										<td class="price-positive">+₱{{ "{:,.2f}".format(order.order_total) }}</td>
+										<td class="commission-negative">-₱{{ "{:,.2f}".format(order.commission_amount) }}</td>
 									</tr>
 									{% endfor %}
 								{% else %}

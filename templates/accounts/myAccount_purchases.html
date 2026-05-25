@@ -257,11 +257,11 @@
 											{% endif %}
 											<div class="item-variant">
 												{% if item.variant_color %}{{ item.variant_color }}{% endif %}
-												{% if item.variant_color and item.variant_size %} �?� {% endif %}
+												{% if item.variant_color and item.variant_size %} • {% endif %}
 												{% if item.variant_size %}Size: {{ item.variant_size }}{% endif %}
 											</div>
 										</div>
-										<div class="item-price">�,�{{ "%.2f"|format(item.unit_price) }}</div>
+										<div class="item-price">₱{{ "%.2f"|format(item.unit_price) }}</div>
 										<div class="item-quantity">Quantity: {{ item.quantity }}</div>
 									</li>
 									{% endfor %}
@@ -270,22 +270,22 @@
 									{% if order.order_status != 'delivered' %}
 									<div class="order-summary-row">
 										<span>Subtotal</span>
-										<span>�,�{{ "%.2f"|format(order.subtotal) }}</span>
+										<span>₱{{ "%.2f"|format(order.subtotal) }}</span>
 									</div>
 									<div class="order-summary-row">
 										<span>Shipping Fee{% if order.voucher_type == 'free_shipping' %} <span style="color: #059669; font-weight: 600;">(Free Shipping Applied)</span>{% endif %}</span>
-										<span{% if order.voucher_type == 'free_shipping' %} style="color: #059669; font-weight: 700;"{% endif %}>{% if order.shipping_fee == 0 and order.voucher_type == 'free_shipping' %}-�,�0.00{% else %}�,�{{ "%.2f"|format(order.shipping_fee) }}{% endif %}</span>
+										<span{% if order.voucher_type == 'free_shipping' %} style="color: #059669; font-weight: 700;"{% endif %}>{% if order.shipping_fee == 0 and order.voucher_type == 'free_shipping' %}-₱0.00{% else %}₱{{ "%.2f"|format(order.shipping_fee) }}{% endif %}</span>
 									</div>
 									{% if order.discount_amount > 0 %}
 									<div class="order-summary-row discount">
 										<span>Discount{% if order.voucher_name %} <span style="color: #059669; font-weight: 600;">({{ order.voucher_name }})</span>{% endif %}</span>
-										<span>-�,�{{ "%.2f"|format(order.discount_amount) }}</span>
+										<span>-₱{{ "%.2f"|format(order.discount_amount) }}</span>
 									</div>
 									{% endif %}
 									{% endif %}
 									<div class="order-summary-row total">
 										<span>{% if order.order_status == 'delivered' %}Total Paid{% else %}Total{% endif %}</span>
-										<span>�,�{{ "%.2f"|format(order.calculated_total) }}</span>
+										<span>₱{{ "%.2f"|format(order.calculated_total) }}</span>
 									</div>
 								</div>
 							</div>
@@ -377,7 +377,7 @@
 					<img src="..." class="review-product-image">
 					<div class="review-product-details">
 						<div class="review-product-name">Product Name</div>
-						<div class="review-product-variant">Color �?� Size</div>
+						<div class="review-product-variant">Color • Size</div>
 					</div>
 				</div>
 				<div class="review-rating-section">
