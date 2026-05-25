@@ -54,12 +54,31 @@ def get_conversations():
                     else:
                         continue
                 
-                # Get delivery status if delivery_id exists
+                # Get delivery status and order confirmation if delivery_id exists.
+                # Buyer-rider chat must remain visible until the buyer has
+                # confirmed receipt of the order (order_received=True), even if
+                # the rider has marked the delivery as 'delivered'.
                 delivery_status = None
+                order_received = None
+                order_id_from_delivery = None
                 if conv.get('delivery_id'):
-                    delivery_response = supabase.table('deliveries').select('status').eq('delivery_id', conv['delivery_id']).execute()
+                    delivery_response = supabase.table('deliveries').select(
+                        'status, order_id'
+                    ).eq('delivery_id', conv['delivery_id']).execute()
                     if delivery_response.data:
-                        delivery_status = delivery_response.data[0]['status']
+                        delivery_row = delivery_response.data[0]
+                        delivery_status = delivery_row.get('status')
+                        order_id_from_delivery = delivery_row.get('order_id')
+
+                if order_id_from_delivery:
+                    try:
+                        order_resp = supabase.table('orders').select(
+                            'order_received, order_status'
+                        ).eq('order_id', order_id_from_delivery).limit(1).execute()
+                        if order_resp.data:
+                            order_received = bool(order_resp.data[0].get('order_received'))
+                    except Exception as order_lookup_err:
+                        print(f"⚠️ order lookup failed for delivery {conv.get('delivery_id')}: {order_lookup_err}")
                 
                 conversations.append({
                     'conversation_id': conv['conversation_id'],
@@ -67,6 +86,7 @@ def get_conversations():
                     'rider_id': conv.get('rider_id'),
                     'delivery_id': conv.get('delivery_id'),
                     'delivery_status': delivery_status,
+                    'order_received': order_received,
                     'contact_id': contact_id,
                     'contact_name': contact_name,
                     'contact_avatar': contact_avatar,

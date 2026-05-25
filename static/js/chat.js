@@ -310,15 +310,27 @@
     function renderConversations(forceUpdate = false) {
         if (!chatContacts) return;
 
-        // Filter out delivered conversations older than 20 seconds
+        // Keep buyer-rider conversations visible while there is an ongoing
+        // delivery. Once the rider marks 'delivered' AND the buyer has
+        // confirmed receipt (order_received=True), give the chat a 20 second
+        // grace window before hiding it from the buyer's list.
         const filteredConversations = conversations.filter(conv => {
-            if (conv.delivery_status === 'delivered' && conv.last_message_time) {
+            // Non-rider conversations (seller/shop) are always visible
+            if (conv.contact_type !== 'rider') {
+                return true;
+            }
+
+            // Rider conversations: keep visible while order is still active
+            // (not yet delivered, OR delivered but not confirmed by buyer).
+            const orderReceived = conv.order_received === true;
+            if (conv.delivery_status === 'delivered' && orderReceived) {
+                if (!conv.last_message_time) return false;
                 const lastMessageDate = new Date(conv.last_message_time);
                 const now = new Date();
                 const diffSeconds = (now - lastMessageDate) / 1000;
-                return diffSeconds <= 20; // Keep only if 20 seconds or less
+                return diffSeconds <= 20; // brief grace window
             }
-            return true; // Keep non-delivered conversations
+            return true;
         });
 
         // Smart update - only update what changed
@@ -749,29 +761,34 @@
         const riderLabel = contactType === 'rider' ? 
             `<div style="font-size: 12px; color: #999; margin-top: 2px;">Rider</div>` : '';
         
-        // Check if THIS SPECIFIC delivery is completed (use conversation_id, not contact_id)
+        // Check if THIS SPECIFIC delivery is completed AND the buyer has
+        // already confirmed receipt of the order. Until both are true, the
+        // buyer should still be able to chat with the rider.
         const conv = conversations.find(c => c.conversation_id == currentConversationId);
-        const isDelivered = conv && conv.delivery_status === 'delivered';
+        const isDelivered = !!(conv && conv.delivery_status === 'delivered');
+        const orderConfirmed = !!(conv && conv.order_received === true);
+        const chatLocked = contactType === 'rider' && isDelivered && orderConfirmed;
         
         console.log('=== Delivery Status Check ===');
         console.log('Conversation ID:', currentConversationId);
         console.log('Found conversation:', conv);
         console.log('Delivery status:', conv?.delivery_status);
-        console.log('Is delivered:', isDelivered);
+        console.log('Order received:', conv?.order_received);
+        console.log('Chat locked:', chatLocked);
         
         // Chat ended message
-        const chatEndedMessage = isDelivered ? `
+        const chatEndedMessage = chatLocked ? `
             <div style="text-align: center; padding: 20px; margin: 20px 0;">
                 <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; display: inline-block;">
                     <i class="bi bi-check-circle" style="color: #4CAF50; font-size: 24px; margin-bottom: 8px; display: block;"></i>
-                    <p style="color: #666; font-weight: 600; margin: 0;">Order Delivered</p>
+                    <p style="color: #666; font-weight: 600; margin: 0;">Order Received</p>
                     <p style="color: #999; font-size: 13px; margin: 5px 0 0 0;">This conversation has ended</p>
                 </div>
             </div>
         ` : '';
         
-        const inputDisabled = isDelivered ? 'disabled' : '';
-        const inputPlaceholder = isDelivered ? 'Chat has ended' : 'Type a message...';
+        const inputDisabled = chatLocked ? 'disabled' : '';
+        const inputPlaceholder = chatLocked ? 'Chat has ended' : 'Type a message...';
         
         let html = `
             <div class="chat-conversation active">
