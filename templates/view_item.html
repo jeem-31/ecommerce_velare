@@ -306,10 +306,10 @@
             <div style="margin-bottom: 16px;">
               <strong style="display: block; margin-bottom: 12px;">Product Details:</strong>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; line-height: 1.8;">
-                <div>�?� Category: {{ product.category }}</div>
-                <div>�?� <a href="#feedbacks-tab" onclick="document.querySelector('.tab[data-tab=&quot;feedbacks&quot;]').click(); return false;" style="color: inherit; text-decoration: none; cursor: pointer;">Rating: <span style="color: #D3BD9B; font-weight: 600;">{{ "%.2f"|format(product.rating) }} ⭐ ({{ product.total_reviews }} reviews)</span></a></div>
-                <div>�?� Stock: {{ total_stock }} available</div>
-                <div>�?� Total Sold: {{ product.total_sold }}</div>
+                <div>• Category: {{ product.category }}</div>
+                <div>• <a href="#feedbacks-tab" onclick="document.querySelector('.tab[data-tab=&quot;feedbacks&quot;]').click(); return false;" style="color: inherit; text-decoration: none; cursor: pointer;">Rating: <span style="color: #D3BD9B; font-weight: 600;">{{ "%.2f"|format(product.rating) }} ⭐ ({{ product.total_reviews }} reviews)</span></a></div>
+                <div>• Stock: {{ total_stock }} available</div>
+                <div>• Total Sold: {{ product.total_sold }}</div>
               </div>
             </div>
             

@@ -182,7 +182,7 @@
             {% endfor %}
             {% if all_categories|length > 3 %}
                 <div class="tab more-tab">
-                    <span>More �-�</span>
+                    <span>More …</span>
                     <div class="more-dropdown">
                         {% for category in all_categories[3:] %}
                             <button class="dropdown-item" data-filter="category" data-category="{{ category }}">{{ category|replace('-', ' ')|title }}</button>
