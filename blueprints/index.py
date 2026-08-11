@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, request, redirect, url_for, jsonify
 import sys
 import os
 import random
@@ -134,3 +134,25 @@ def index():
                          latest_products=latest_products,
                          top_rated_products=top_rated_products,
                          random_products=random_products)
+
+
+@index_bp.route('/mobile-notice')
+def mobile_notice_page():
+    """Desktop-only notice page shown to mobile/tablet visitors."""
+    next_path = request.args.get('next', '/')
+    # Only accept same-origin relative paths (client-side nav, but stay safe).
+    if not next_path.startswith('/') or next_path.startswith('//'):
+        next_path = '/'
+    return render_template('mobile_notice.html',
+                           next_path=next_path,
+                           is_logged_in='user_id' in session)
+
+
+@index_bp.route('/mobile-notice/allow', methods=['POST'])
+def mobile_notice_allow():
+    """Called only by the notice page's JS when the live viewport is wide
+    enough (>= 1024px). Sets a session flag so the before_request gate stops
+    redirecting. Not reachable via a visible override button."""
+    session['_size_allowed'] = True
+    session.permanent = True
+    return jsonify({'ok': True}), 200

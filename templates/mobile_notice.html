@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Veláre - Desktop Only</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/Velare Logo Tab 1.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Goudy+Bookletter+1911&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_notice.css') }}">
+</head>
+<body>
+    <main class="notice-wrap">
+        <div class="notice-card" id="mobile-notice" data-next="{{ next_path }}">
+            <img class="notice-logo" src="{{ url_for('static', filename='images/velarelogo.png') }}" alt="Veláre Logo">
+            <h1 class="notice-title">This page is available on desktop only</h1>
+            <p class="notice-message">
+                Veláre is designed as a desktop experience. Please open this site on a
+                computer to shop, sell, deliver, or manage your account.
+            </p>
+            <div class="notice-footer">
+                <i class="notice-line"></i>
+                <p class="notice-sub">Thank you for your understanding.</p>
+            </div>
+        </div>
+    </main>
+    <script defer src="{{ url_for('static', filename='js/mobile_notice.js') }}"></script>
+</body>
+</html>

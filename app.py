@@ -1,5 +1,6 @@
 from flask import Flask
 import os
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -139,6 +140,61 @@ app.register_blueprint(admin_user_reports_bp)
 # Suspensions/bans need to be enforced quickly but we don't want to query the
 # DB on every single tab navigation.
 SUSPENSION_CHECK_CACHE_SECONDS = 60
+
+# Velare is a desktop-only experience. The server-side User-Agent gate below
+# blocks mobile/tablet devices from every page (buyer, seller, rider, admin)
+# and works even with JavaScript disabled. A visitor whose live viewport
+# actually has enough room (large tablet / foldable / "desktop site" mode) is
+# auto-allowed by the notice page via POST /mobile-notice/allow, which sets a
+# session flag the gate below respects.
+
+MIN_DESKTOP_WIDTH = 1024
+
+MOBILE_UA_PATTERNS = re.compile(
+    r'Mobile|Android|iPhone|iPod|iPad|Tablet|Windows Phone|Silk|Kindle|'
+    r'Opera Mini|IEMobile|BB10|BlackBerry|PlayBook|webOS|Mobi|Fennec|'
+    r'Nokia|Symbian|PocketPC', re.IGNORECASE
+)
+
+BOT_UA_PATTERNS = re.compile(
+    r'bot|crawler|spider|Googlebot|Bingbot|Slurp|DuckDuckBot|baiduspider|'
+    r'yandex|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Pinterest|'
+    r'AhrefsBot|SemrushBot|MJ12bot|curl|wget|python|Go-http-client|'
+    r'UptimeRobot|pingdom|headless', re.IGNORECASE
+)
+
+
+@app.before_request
+def block_mobile_users():
+    """Redirect mobile/tablet visits to the desktop-only notice page."""
+    from flask import request, redirect, url_for, session
+
+    path = request.path
+
+    # Never gate static assets, infrastructure probes, or the notice page itself.
+    if (path.startswith('/static') or
+            path == '/health' or
+            path == '/favicon.ico' or
+            path == '/mobile-notice' or
+            path == '/mobile-notice/allow'):
+        return None
+
+    # Once the notice page verified there is enough screen space, stop blocking.
+    if session.get('_size_allowed'):
+        return None
+
+    user_agent = request.headers.get('User-Agent', '')
+    if not user_agent:
+        return None
+
+    # Never block crawlers / health probes / API tooling.
+    if BOT_UA_PATTERNS.search(user_agent):
+        return None
+
+    if MOBILE_UA_PATTERNS.search(user_agent):
+        return redirect(url_for('index.mobile_notice_page', next=request.full_path))
+
+    return None
 
 
 @app.before_request
